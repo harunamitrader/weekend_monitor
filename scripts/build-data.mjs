@@ -17,7 +17,7 @@ const BASELINE_STATE_FILE = path.join(
   "baselines.json",
 );
 const TIME_ZONE = "Asia/Tokyo";
-const BASELINE_STATE_VERSION = 2;
+const BASELINE_STATE_VERSION = 3;
 
 function resolveNow() {
   const raw = process.env.BUILD_NOW;
@@ -41,37 +41,45 @@ function round(value, digits = 4) {
   return Number(value.toFixed(digits));
 }
 
-function getLocalDateInfo(date, timezone) {
+function getLocalTimeParts(date, timezone) {
   const formatter = new Intl.DateTimeFormat("en-US", {
     timeZone: timezone,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
     weekday: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
   });
 
-  const parts = Object.fromEntries(
+  return Object.fromEntries(
     formatter.formatToParts(date).map((part) => [part.type, part.value]),
   );
-  const dateKey = `${parts.year}-${parts.month}-${parts.day}`;
+}
+
+function getDateKeyInfo(dateKey, timezone) {
+  const parts = getLocalTimeParts(new Date(`${dateKey}T12:00:00.000Z`), timezone);
+  const normalizedDateKey = `${parts.year}-${parts.month}-${parts.day}`;
   const isWeekend = parts.weekday === "Sat" || parts.weekday === "Sun";
 
   return {
-    dateKey,
+    dateKey: normalizedDateKey,
     weekday: parts.weekday,
     isWeekend,
     isFriday: parts.weekday === "Fri",
   };
 }
 
-function getDateKeyInfo(dateKey, timezone) {
-  return getLocalDateInfo(new Date(`${dateKey}T12:00:00.000Z`), timezone);
-}
-
 function shiftDateKey(dateKey, days, timezone) {
   const base = new Date(`${dateKey}T12:00:00.000Z`);
   base.setUTCDate(base.getUTCDate() + days);
-  return getLocalDateInfo(base, timezone).dateKey;
+  return getDateKeyInfo(
+    `${base.getUTCFullYear()}-${String(base.getUTCMonth() + 1).padStart(2, "0")}-${String(
+      base.getUTCDate(),
+    ).padStart(2, "0")}`,
+    timezone,
+  ).dateKey;
 }
 
 function findPreviousWeekdayDateKey(dateKey, timezone) {
@@ -96,10 +104,27 @@ function findLastFridayDateKey(dateKey, timezone) {
   }
 }
 
-function getBaselineMode(date, market) {
-  const nowInfo = getLocalDateInfo(date, market.baselineTimezone);
+function isAtOrAfterCutover(parts, market) {
+  const hour = Number(parts.hour);
+  const minute = Number(parts.minute);
+  const cutoverHour = Number(market.baselineCutoverHourLocal ?? 0);
+  const cutoverMinute = Number(market.baselineCutoverMinuteLocal ?? 0);
 
-  if (nowInfo.isWeekend) {
+  return hour > cutoverHour || (hour === cutoverHour && minute >= cutoverMinute);
+}
+
+function getSessionInfo(date, market) {
+  const parts = getLocalTimeParts(date, market.baselineTimezone);
+  const localDateKey = `${parts.year}-${parts.month}-${parts.day}`;
+  const sessionDateKey = isAtOrAfterCutover(parts, market)
+    ? shiftDateKey(localDateKey, 1, market.baselineTimezone)
+    : localDateKey;
+
+  return getDateKeyInfo(sessionDateKey, market.baselineTimezone);
+}
+
+function getBaselineMode(sessionInfo) {
+  if (sessionInfo.isWeekend) {
     return {
       mode: "friday_close",
       labelJa: "金曜終値",
@@ -134,26 +159,13 @@ function hasCloseSnapshot(snapshot) {
 function normalizeMarketState(state, market) {
   return {
     timezone: market.baselineTimezone,
+    cutoverHourLocal: market.baselineCutoverHourLocal,
+    cutoverMinuteLocal: market.baselineCutoverMinuteLocal,
     cutoverLabelJa: market.baselineCutoverLabelJa,
     currentSession: normalizeCloseSnapshot(state?.currentSession),
     previousClose: normalizeCloseSnapshot(state?.previousClose),
     fridayClose: normalizeCloseSnapshot(state?.fridayClose),
   };
-}
-
-function extractLegacyClose(dayState, market) {
-  const legacyMarket = dayState?.markets?.[market.id];
-  if (!legacyMarket) {
-    return null;
-  }
-
-  return normalizeCloseSnapshot({
-    date: dayState?.date ?? null,
-    weekday: dayState?.weekday ?? null,
-    closePrice: legacyMarket.closePrice,
-    capturedAt: legacyMarket.capturedAt,
-    seeded: legacyMarket.seeded,
-  });
 }
 
 function normalizeSnapshotState(state, markets) {
@@ -176,34 +188,36 @@ function normalizeSnapshotState(state, markets) {
         market.id,
         {
           timezone: market.baselineTimezone,
+          cutoverHourLocal: market.baselineCutoverHourLocal,
+          cutoverMinuteLocal: market.baselineCutoverMinuteLocal,
           cutoverLabelJa: market.baselineCutoverLabelJa,
           currentSession: null,
-          previousClose: extractLegacyClose(state?.previousWeekdayClose, market),
-          fridayClose: extractLegacyClose(state?.fridayClose, market),
+          previousClose: null,
+          fridayClose: null,
         },
       ]),
     ),
   };
 }
 
-function startMarketSession(nowInfo) {
+function startMarketSession(sessionInfo) {
   return {
-    date: nowInfo.dateKey,
-    weekday: nowInfo.weekday,
+    date: sessionInfo.dateKey,
+    weekday: sessionInfo.weekday,
     closePrice: null,
     capturedAt: null,
     seeded: false,
   };
 }
 
-function rollMarketState(state, nowInfo) {
+function rollMarketState(state, sessionInfo) {
   if (!state.currentSession) {
-    state.currentSession = startMarketSession(nowInfo);
+    state.currentSession = startMarketSession(sessionInfo);
     return state;
   }
 
-  if (state.currentSession.date === nowInfo.dateKey) {
-    state.currentSession.weekday = nowInfo.weekday;
+  if (state.currentSession.date === sessionInfo.dateKey) {
+    state.currentSession.weekday = sessionInfo.weekday;
     return state;
   }
 
@@ -226,7 +240,7 @@ function rollMarketState(state, nowInfo) {
     }
   }
 
-  state.currentSession = startMarketSession(nowInfo);
+  state.currentSession = startMarketSession(sessionInfo);
   return state;
 }
 
@@ -255,14 +269,17 @@ function buildSeededCloseSnapshot(market, capturedAt) {
   };
 }
 
-function seedMissingMarketBaselines(state, market, baselineMode, nowInfo, capturedAt) {
+function seedMissingMarketBaselines(state, market, baselineMode, sessionInfo, capturedAt) {
   const seededSnapshot = buildSeededCloseSnapshot(market, capturedAt);
   if (!seededSnapshot) {
     return state;
   }
 
   if (!hasCloseSnapshot(state.previousClose)) {
-    const previousDate = findPreviousWeekdayDateKey(nowInfo.dateKey, state.timezone);
+    const previousDate = findPreviousWeekdayDateKey(
+      sessionInfo.dateKey,
+      state.timezone,
+    );
     const previousInfo = getDateKeyInfo(previousDate, state.timezone);
     state.previousClose = {
       ...seededSnapshot,
@@ -272,7 +289,7 @@ function seedMissingMarketBaselines(state, market, baselineMode, nowInfo, captur
   }
 
   const previousDate = state.previousClose?.date;
-  const fridayDate = findLastFridayDateKey(nowInfo.dateKey, state.timezone);
+  const fridayDate = findLastFridayDateKey(sessionInfo.dateKey, state.timezone);
   const canSeedFriday =
     baselineMode.mode === "friday_close" || previousDate === fridayDate;
 
@@ -321,6 +338,8 @@ function applyBaseline(record, baselineMode, snapshotBaseline) {
     baselineMode: baselineMode.mode,
     baselineLabelJa: baselineMode.labelJa,
     baselineTimezone: record.baselineTimezone,
+    baselineCutoverHourLocal: record.baselineCutoverHourLocal,
+    baselineCutoverMinuteLocal: record.baselineCutoverMinuteLocal,
     baselineCutoverLabelJa: record.baselineCutoverLabelJa,
     error: record.error,
   };
@@ -375,7 +394,12 @@ async function loadMarkets() {
   }
 
   for (const market of markets) {
-    if (!market.baselineTimezone || !market.baselineCutoverLabelJa) {
+    if (
+      !market.baselineTimezone ||
+      market.baselineCutoverHourLocal == null ||
+      market.baselineCutoverMinuteLocal == null ||
+      !market.baselineCutoverLabelJa
+    ) {
       throw new Error(`baseline 設定が不足しています: ${market.id}`);
     }
   }
@@ -405,6 +429,14 @@ function createFallbackRecord(market, previousRecord, reason) {
       fetchedAt: new Date().toISOString(),
       baselineTimezone:
         previousRecord.baselineTimezone ?? market.baselineTimezone ?? null,
+      baselineCutoverHourLocal:
+        previousRecord.baselineCutoverHourLocal ??
+        market.baselineCutoverHourLocal ??
+        null,
+      baselineCutoverMinuteLocal:
+        previousRecord.baselineCutoverMinuteLocal ??
+        market.baselineCutoverMinuteLocal ??
+        null,
       baselineCutoverLabelJa:
         previousRecord.baselineCutoverLabelJa ??
         market.baselineCutoverLabelJa ??
@@ -429,6 +461,8 @@ function createFallbackRecord(market, previousRecord, reason) {
     error: reason,
     fetchedAt: new Date().toISOString(),
     baselineTimezone: market.baselineTimezone,
+    baselineCutoverHourLocal: market.baselineCutoverHourLocal,
+    baselineCutoverMinuteLocal: market.baselineCutoverMinuteLocal,
     baselineCutoverLabelJa: market.baselineCutoverLabelJa,
   };
 }
@@ -464,6 +498,8 @@ function buildHistoryRun(payload) {
       baselineMode: market.baselineMode,
       baselineLabelJa: market.baselineLabelJa,
       baselineTimezone: market.baselineTimezone,
+      baselineCutoverHourLocal: market.baselineCutoverHourLocal,
+      baselineCutoverMinuteLocal: market.baselineCutoverMinuteLocal,
       baselineCutoverLabelJa: market.baselineCutoverLabelJa,
       baselineSource: market.baselineSource,
       baselineSnapshotDate: market.baselineSnapshotDate ?? null,
@@ -558,8 +594,19 @@ function summarizeBaselinePayload(markets) {
 async function main() {
   const now = resolveNow();
   const nowIso = now.toISOString();
-  const nowInfo = getLocalDateInfo(now, TIME_ZONE);
+  const nowInfo = getDateKeyInfo(
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: TIME_ZONE,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    })
+      .format(now)
+      .replaceAll("/", "-"),
+    TIME_ZONE,
+  );
   const markets = await loadMarkets();
+  const marketConfigMap = new Map(markets.map((market) => [market.id, market]));
   const previous = await readJson(OUTPUT_FILE, { markets: [] });
   const baselineState = normalizeSnapshotState(
     await readJson(BASELINE_STATE_FILE, {}),
@@ -575,6 +622,8 @@ async function main() {
       return {
         ...detail,
         baselineTimezone: market.baselineTimezone,
+        baselineCutoverHourLocal: market.baselineCutoverHourLocal,
+        baselineCutoverMinuteLocal: market.baselineCutoverMinuteLocal,
         baselineCutoverLabelJa: market.baselineCutoverLabelJa,
       };
     }),
@@ -598,20 +647,20 @@ async function main() {
   };
 
   const normalizedMarkets = rawMarkets.map((market) => {
-    const marketConfig = markets.find((entry) => entry.id === market.id) ?? market;
+    const marketConfig = marketConfigMap.get(market.id) ?? market;
     const marketState = normalizeMarketState(
       baselineState.markets?.[market.id],
       marketConfig,
     );
-    const marketNowInfo = getLocalDateInfo(now, marketState.timezone);
-    const baselineMode = getBaselineMode(now, marketConfig);
+    const sessionInfo = getSessionInfo(now, marketConfig);
+    const baselineMode = getBaselineMode(sessionInfo);
 
-    rollMarketState(marketState, marketNowInfo);
+    rollMarketState(marketState, sessionInfo);
     seedMissingMarketBaselines(
       marketState,
       market,
       baselineMode,
-      marketNowInfo,
+      sessionInfo,
       nowIso,
     );
     updateCurrentSessionCloseCandidate(marketState, market, nowIso);

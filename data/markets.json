@@ -4,40 +4,50 @@
     "marketId": "SUNASX",
     "name": "Weekend Australia 200",
     "url": "https://www.ig.com/en/indices/markets-indices/weekend-australia-200",
-    "baselineTimezone": "Australia/Sydney",
-    "baselineCutoverLabelJa": "シドニー 00:00"
+    "baselineTimezone": "America/New_York",
+    "baselineCutoverHourLocal": 17,
+    "baselineCutoverMinuteLocal": 0,
+    "baselineCutoverLabelJa": "06:00/07:00 JST"
   },
   {
     "id": "weekend-eurusd",
     "marketId": "SUNEURUSD",
     "name": "Weekend EURUSD",
     "url": "https://www.ig.com/en/indices/markets-indices/weekend-eurusd",
-    "baselineTimezone": "Europe/London",
-    "baselineCutoverLabelJa": "ロンドン 00:00"
+    "baselineTimezone": "America/New_York",
+    "baselineCutoverHourLocal": 17,
+    "baselineCutoverMinuteLocal": 0,
+    "baselineCutoverLabelJa": "06:00/07:00 JST"
   },
   {
     "id": "weekend-germany-40",
     "marketId": "SUNDAX",
     "name": "Weekend Germany 40",
     "url": "https://www.ig.com/en/indices/markets-indices/weekend-germany-40",
-    "baselineTimezone": "Europe/Berlin",
-    "baselineCutoverLabelJa": "ベルリン 00:00"
+    "baselineTimezone": "America/New_York",
+    "baselineCutoverHourLocal": 17,
+    "baselineCutoverMinuteLocal": 0,
+    "baselineCutoverLabelJa": "06:00/07:00 JST"
   },
   {
     "id": "weekend-gold",
     "marketId": "SUNGOLD",
     "name": "Weekend Gold",
     "url": "https://www.ig.com/en/indices/markets-indices/weekend-gold",
-    "baselineTimezone": "Europe/London",
-    "baselineCutoverLabelJa": "ロンドン 00:00"
+    "baselineTimezone": "America/New_York",
+    "baselineCutoverHourLocal": 17,
+    "baselineCutoverMinuteLocal": 0,
+    "baselineCutoverLabelJa": "06:00/07:00 JST"
   },
   {
     "id": "weekend-hongkong-hs50",
     "marketId": "SUNHANS",
     "name": "Weekend Hong Kong HS50",
     "url": "https://www.ig.com/en/indices/markets-indices/weekend-hongkong-hs50",
-    "baselineTimezone": "Asia/Hong_Kong",
-    "baselineCutoverLabelJa": "香港 00:00"
+    "baselineTimezone": "America/New_York",
+    "baselineCutoverHourLocal": 17,
+    "baselineCutoverMinuteLocal": 0,
+    "baselineCutoverLabelJa": "06:00/07:00 JST"
   },
   {
     "id": "weekend-oil---us-crude",
@@ -45,23 +55,29 @@
     "name": "Weekend Oil - US Crude",
     "url": "https://www.ig.com/en/indices/markets-indices/weekend-oil---us-crude",
     "baselineTimezone": "America/New_York",
-    "baselineCutoverLabelJa": "ニューヨーク 00:00"
+    "baselineCutoverHourLocal": 17,
+    "baselineCutoverMinuteLocal": 0,
+    "baselineCutoverLabelJa": "06:00/07:00 JST"
   },
   {
     "id": "weekend-spot-silver",
     "marketId": "SUNSILVER",
     "name": "Weekend Spot Silver",
     "url": "https://www.ig.com/en/indices/markets-indices/weekend-spot-silver",
-    "baselineTimezone": "Europe/London",
-    "baselineCutoverLabelJa": "ロンドン 00:00"
+    "baselineTimezone": "America/New_York",
+    "baselineCutoverHourLocal": 17,
+    "baselineCutoverMinuteLocal": 0,
+    "baselineCutoverLabelJa": "06:00/07:00 JST"
   },
   {
     "id": "weekend-uk-100",
     "marketId": "SUNFUN",
     "name": "Weekend UK 100",
     "url": "https://www.ig.com/en/indices/markets-indices/weekend-uk-100",
-    "baselineTimezone": "Europe/London",
-    "baselineCutoverLabelJa": "ロンドン 00:00"
+    "baselineTimezone": "America/New_York",
+    "baselineCutoverHourLocal": 17,
+    "baselineCutoverMinuteLocal": 0,
+    "baselineCutoverLabelJa": "06:00/07:00 JST"
   },
   {
     "id": "weekend-us-tech-100-e1",
@@ -69,15 +85,19 @@
     "name": "Weekend US Tech 100",
     "url": "https://www.ig.com/en/indices/markets-indices/weekend-us-tech-100-e1",
     "baselineTimezone": "America/New_York",
-    "baselineCutoverLabelJa": "ニューヨーク 00:00"
+    "baselineCutoverHourLocal": 17,
+    "baselineCutoverMinuteLocal": 0,
+    "baselineCutoverLabelJa": "06:00/07:00 JST"
   },
   {
     "id": "weekend-usdjpy",
     "marketId": "SUNUSDJPY",
     "name": "Weekend USDJPY",
     "url": "https://www.ig.com/en/indices/markets-indices/weekend-usdjpy",
-    "baselineTimezone": "Europe/London",
-    "baselineCutoverLabelJa": "ロンドン 00:00"
+    "baselineTimezone": "America/New_York",
+    "baselineCutoverHourLocal": 17,
+    "baselineCutoverMinuteLocal": 0,
+    "baselineCutoverLabelJa": "06:00/07:00 JST"
   },
   {
     "id": "weekend-wall-street",
@@ -85,6 +105,8 @@
     "name": "Weekend Wall Street",
     "url": "https://www.ig.com/en/indices/markets-indices/weekend-wall-street",
     "baselineTimezone": "America/New_York",
-    "baselineCutoverLabelJa": "ニューヨーク 00:00"
+    "baselineCutoverHourLocal": 17,
+    "baselineCutoverMinuteLocal": 0,
+    "baselineCutoverLabelJa": "06:00/07:00 JST"
   }
 ]
