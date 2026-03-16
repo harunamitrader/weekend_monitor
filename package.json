@@ -1,0 +1,10 @@
+{
+  "name": "weekend-monitor",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:data": "node scripts/build-data.mjs",
+    "refresh:markets": "node scripts/fetch-weekend-markets.mjs"
+  }
+}

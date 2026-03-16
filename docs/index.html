@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weekend Monitor</title>
+    <meta
+      name="description"
+      content="IG weekend 11銘柄の現在価格と基準比をシンプルに監視するページ"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero">
+        <p class="eyebrow">IG Weekend Markets</p>
+        <div class="hero-row">
+          <h1>Weekend Monitor</h1>
+          <a
+            class="hero-link"
+            href="https://www.ig.com/en/ig-search?query=weekend"
+            target="_blank"
+            rel="noreferrer"
+          >
+            IG Search
+          </a>
+        </div>
+        <div class="hero-meta">
+          <p id="summary-text" class="summary-text">11 markets / loading</p>
+          <p id="updated-at" class="updated-at">更新時刻を取得中</p>
+        </div>
+      </header>
+
+      <main>
+        <section class="market-headline">
+          <div class="headline-cell">銘柄</div>
+          <div class="headline-cell align-right">現在価格</div>
+          <div class="headline-cell align-right">基準価格</div>
+          <div class="headline-cell align-right">変化量</div>
+          <div class="headline-cell align-right">変化率</div>
+          <div class="headline-cell align-right">リンク</div>
+        </section>
+
+        <section id="market-grid" class="market-grid" aria-live="polite"></section>
+      </main>
+    </div>
+
+    <template id="market-card-template">
+      <article class="market-card">
+        <div class="market-title-group">
+          <p class="market-name"></p>
+          <p class="market-baseline"></p>
+        </div>
+        <div class="market-metric">
+          <span class="metric-label">Current</span>
+          <span class="metric-value current-price"></span>
+        </div>
+        <div class="market-metric">
+          <span class="metric-label">Baseline</span>
+          <span class="metric-value baseline-price"></span>
+        </div>
+        <div class="market-metric">
+          <span class="metric-label">Change</span>
+          <span class="metric-value change-value"></span>
+        </div>
+        <div class="market-metric">
+          <span class="metric-label">% Move</span>
+          <span class="metric-value change-percent"></span>
+        </div>
+        <div class="market-actions">
+          <a class="market-link" target="_blank" rel="noreferrer">Open</a>
+        </div>
+      </article>
+    </template>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
