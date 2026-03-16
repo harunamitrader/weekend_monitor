@@ -8,78 +8,78 @@
         "marketId": "SUNASX",
         "name": "Weekend Australia 200",
         "url": "https://www.ig.com/en/indices/markets-indices/weekend-australia-200",
-        "closePrice": 8632.7,
-        "capturedAt": "2026-03-16T21:21:31.085Z"
+        "closePrice": 8633.6,
+        "capturedAt": "2026-03-16T21:58:58.651Z"
       },
       "weekend-eurusd": {
         "marketId": "SUNEURUSD",
         "name": "Weekend EURUSD",
         "url": "https://www.ig.com/en/indices/markets-indices/weekend-eurusd",
-        "closePrice": 1.1505,
-        "capturedAt": "2026-03-16T21:21:31.085Z"
+        "closePrice": 1.1508,
+        "capturedAt": "2026-03-16T21:58:58.651Z"
       },
       "weekend-germany-40": {
         "marketId": "SUNDAX",
         "name": "Weekend Germany 40",
         "url": "https://www.ig.com/en/indices/markets-indices/weekend-germany-40",
-        "closePrice": 23611.8,
-        "capturedAt": "2026-03-16T21:21:31.085Z"
+        "closePrice": 23615.9,
+        "capturedAt": "2026-03-16T21:58:58.651Z"
       },
       "weekend-gold": {
         "marketId": "SUNGOLD",
         "name": "Weekend Gold",
         "url": "https://www.ig.com/en/indices/markets-indices/weekend-gold",
         "closePrice": 5003.9,
-        "capturedAt": "2026-03-16T21:21:31.085Z"
+        "capturedAt": "2026-03-16T21:58:58.651Z"
       },
       "weekend-hongkong-hs50": {
         "marketId": "SUNHANS",
         "name": "Weekend Hong Kong HS50",
         "url": "https://www.ig.com/en/indices/markets-indices/weekend-hongkong-hs50",
-        "closePrice": 25861.2,
-        "capturedAt": "2026-03-16T21:21:31.085Z"
+        "closePrice": 25858,
+        "capturedAt": "2026-03-16T21:58:58.651Z"
       },
       "weekend-oil---us-crude": {
         "marketId": "SUNCL",
         "name": "Weekend Oil - US Crude",
         "url": "https://www.ig.com/en/indices/markets-indices/weekend-oil---us-crude",
         "closePrice": 9334.1,
-        "capturedAt": "2026-03-16T21:21:31.085Z"
+        "capturedAt": "2026-03-16T21:58:58.651Z"
       },
       "weekend-spot-silver": {
         "marketId": "SUNSILVER",
         "name": "Weekend Spot Silver",
         "url": "https://www.ig.com/en/indices/markets-indices/weekend-spot-silver",
         "closePrice": 8075.1,
-        "capturedAt": "2026-03-16T21:21:31.085Z"
+        "capturedAt": "2026-03-16T21:58:58.651Z"
       },
       "weekend-uk-100": {
         "marketId": "SUNFUN",
         "name": "Weekend UK 100",
         "url": "https://www.ig.com/en/indices/markets-indices/weekend-uk-100",
-        "closePrice": 10341.1,
-        "capturedAt": "2026-03-16T21:21:31.085Z"
+        "closePrice": 10343.9,
+        "capturedAt": "2026-03-16T21:58:58.651Z"
       },
       "weekend-us-tech-100-e1": {
         "marketId": "SUNNAS",
         "name": "Weekend US Tech 100",
         "url": "https://www.ig.com/en/indices/markets-indices/weekend-us-tech-100-e1",
-        "closePrice": 24640.1,
-        "capturedAt": "2026-03-16T21:21:31.085Z"
+        "closePrice": 24640.5,
+        "capturedAt": "2026-03-16T21:58:58.651Z"
       },
       "weekend-usdjpy": {
         "marketId": "SUNUSDJPY",
         "name": "Weekend USDJPY",
         "url": "https://www.ig.com/en/indices/markets-indices/weekend-usdjpy",
-        "closePrice": 159.102,
-        "capturedAt": "2026-03-16T21:21:31.085Z"
+        "closePrice": 159.002,
+        "capturedAt": "2026-03-16T21:58:58.651Z"
       },
       "weekend-wall-street": {
         "marketId": "SUNDOW",
         "name": "Weekend Wall Street",
         "url": "https://www.ig.com/en/indices/markets-indices/weekend-wall-street",
-        "closePrice": 46930.2,
-        "capturedAt": "2026-03-16T21:21:31.085Z"
+        "closePrice": 46931.6,
+        "capturedAt": "2026-03-16T21:58:58.651Z"
       }
     }
   },
