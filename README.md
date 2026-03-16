@@ -11,7 +11,7 @@ IG 証券の weekend 11 銘柄を 15 分ごとに取得し、GitHub Pages で公
 - `docs/`: 公開用の静的ページ
 - `docs/data/latest.json`: フロントエンドが読む最新データ
 - `scripts/`: スクレイピングとデータ生成スクリプト
-- `data/markets.json`: 監視対象 11 銘柄の定義
+- `data/markets.json`: 監視対象 11 銘柄の固定定義
 - `data/snapshots/baselines.json`: 前日終値・金曜終値の保存状態
 - `data/history/YYYY-MM-DD.json`: 15 分ごとの価格履歴
 - `data/history/index.json`: 履歴ファイル一覧
@@ -32,11 +32,7 @@ $env:BUILD_NOW="2026-03-21T00:05:00+09:00"
 npm run build:data
 ```
 
-### 監視対象一覧の再取得
-
-```bash
-npm run refresh:markets
-```
+監視対象の 11 銘柄 URL は `data/markets.json` に固定で保持しており、検索ページから自動再取得はしない。
 
 ## 基準価格ロジック
 
@@ -98,7 +94,6 @@ npm run refresh:markets
 
 ### ローカル確認
 
-- `npm run refresh:markets`
 - `npm run build:data`
 - `docs/index.html` を静的サーバー経由で開く
 
@@ -113,4 +108,5 @@ npm run refresh:markets
 
 - GitHub Actions のスケジュールは遅延する場合がある
 - IG 側の HTML 構造が変わるとパーサの調整が必要になる
+- 監視対象一覧は検索ページではなく `data/markets.json` の固定 URL を使う
 - 初回や履歴不足時は、商品ページに公開されている価格差分から基準価格を算出する
