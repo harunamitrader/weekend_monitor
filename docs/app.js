@@ -7,7 +7,7 @@ const template = document.querySelector("#market-card-template");
 
 function formatNumber(value, digits = 2) {
   if (value == null || Number.isNaN(value)) {
-    return "—";
+    return "--";
   }
 
   return new Intl.NumberFormat("en-US", {
@@ -18,7 +18,7 @@ function formatNumber(value, digits = 2) {
 
 function formatSigned(value, digits = 2, suffix = "") {
   if (value == null || Number.isNaN(value)) {
-    return "—";
+    return "--";
   }
 
   const formatted = formatNumber(Math.abs(value), digits);
@@ -51,6 +51,24 @@ function applyMoveClass(node, value) {
   }
 }
 
+function buildBaselineText(market) {
+  const parts = [market.baselineLabelJa || "前日終値"];
+
+  if (market.baselineCutoverLabelJa) {
+    parts.push(market.baselineCutoverLabelJa);
+  }
+
+  if (!String(market.baselineSource || "").startsWith("snapshot")) {
+    parts.push("fallback");
+  }
+
+  if (market.stale) {
+    parts.push("stale");
+  }
+
+  return parts.join(" / ");
+}
+
 function renderMarket(market) {
   const fragment = template.content.cloneNode(true);
   const card = fragment.querySelector(".market-card");
@@ -63,11 +81,7 @@ function renderMarket(market) {
   const marketLink = fragment.querySelector(".market-link");
 
   marketName.textContent = market.name;
-  const baselineText = market.baselineLabelJa || "前日終値基準";
-  marketBaseline.textContent =
-    String(market.baselineSource || "").startsWith("snapshot")
-      ? baselineText
-      : `${baselineText} / fallback`;
+  marketBaseline.textContent = buildBaselineText(market);
   currentPrice.textContent = formatNumber(market.currentPrice, 4);
   baselinePrice.textContent = formatNumber(market.baselinePrice, 4);
   changeValue.textContent = formatSigned(market.change, 4);
@@ -79,7 +93,6 @@ function renderMarket(market) {
 
   if (market.stale) {
     card.classList.add("is-stale");
-    marketBaseline.textContent = `${marketBaseline.textContent} / stale`;
   }
 
   return fragment;
@@ -103,7 +116,7 @@ async function main() {
     const payload = await loadData();
     const markets = Array.isArray(payload.markets) ? payload.markets : [];
 
-    summaryText.textContent = `${markets.length} markets / ${payload.baselineLabelJa || "前日終値基準"}`;
+    summaryText.textContent = `${markets.length} markets / ${payload.baselineLabelJa || "前日終値"}`;
     updatedAt.textContent = `最終更新 ${formatUpdatedAt(payload.updatedAt, payload.timezone || "Asia/Tokyo")}`;
 
     if (markets.length === 0) {

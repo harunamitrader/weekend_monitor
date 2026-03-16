@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { fetchMarketPage, getBaselineMode } from "./parse-market-page.mjs";
+import { fetchMarketPage } from "./parse-market-page.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, "..");
@@ -17,6 +17,7 @@ const BASELINE_STATE_FILE = path.join(
   "baselines.json",
 );
 const TIME_ZONE = "Asia/Tokyo";
+const BASELINE_STATE_VERSION = 2;
 
 function resolveNow() {
   const raw = process.env.BUILD_NOW;
@@ -40,9 +41,9 @@ function round(value, digits = 4) {
   return Number(value.toFixed(digits));
 }
 
-function getTokyoDateInfo(date = new Date()) {
+function getLocalDateInfo(date, timezone) {
   const formatter = new Intl.DateTimeFormat("en-US", {
-    timeZone: TIME_ZONE,
+    timeZone: timezone,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -63,184 +64,244 @@ function getTokyoDateInfo(date = new Date()) {
   };
 }
 
-function getDateKeyInfo(dateKey) {
-  return getTokyoDateInfo(new Date(`${dateKey}T12:00:00+09:00`));
+function getDateKeyInfo(dateKey, timezone) {
+  return getLocalDateInfo(new Date(`${dateKey}T12:00:00.000Z`), timezone);
 }
 
-function shiftDateKey(dateKey, days) {
-  const base = new Date(`${dateKey}T12:00:00+09:00`);
-  base.setDate(base.getDate() + days);
-  return getTokyoDateInfo(base).dateKey;
+function shiftDateKey(dateKey, days, timezone) {
+  const base = new Date(`${dateKey}T12:00:00.000Z`);
+  base.setUTCDate(base.getUTCDate() + days);
+  return getLocalDateInfo(base, timezone).dateKey;
 }
 
-function findPreviousWeekdayDateKey(dateKey) {
-  let cursor = shiftDateKey(dateKey, -1);
+function findPreviousWeekdayDateKey(dateKey, timezone) {
+  let cursor = shiftDateKey(dateKey, -1, timezone);
   while (true) {
-    const info = getDateKeyInfo(cursor);
+    const info = getDateKeyInfo(cursor, timezone);
     if (!info.isWeekend) {
       return info.dateKey;
     }
-    cursor = shiftDateKey(cursor, -1);
+    cursor = shiftDateKey(cursor, -1, timezone);
   }
 }
 
-function findLastFridayDateKey(dateKey) {
-  let cursor = shiftDateKey(dateKey, -1);
+function findLastFridayDateKey(dateKey, timezone) {
+  let cursor = shiftDateKey(dateKey, -1, timezone);
   while (true) {
-    const info = getDateKeyInfo(cursor);
+    const info = getDateKeyInfo(cursor, timezone);
     if (info.isFriday) {
       return info.dateKey;
     }
-    cursor = shiftDateKey(cursor, -1);
+    cursor = shiftDateKey(cursor, -1, timezone);
   }
 }
 
-function normalizeSnapshotState(state) {
+function getBaselineMode(date, market) {
+  const nowInfo = getLocalDateInfo(date, market.baselineTimezone);
+
+  if (nowInfo.isWeekend) {
+    return {
+      mode: "friday_close",
+      labelJa: "金曜終値",
+    };
+  }
+
   return {
-    timezone: TIME_ZONE,
-    currentDay: state?.currentDay ?? null,
-    previousWeekdayClose: state?.previousWeekdayClose ?? null,
-    fridayClose: state?.fridayClose ?? null,
+    mode: "previous_close",
+    labelJa: "前日終値",
   };
 }
 
-function startSnapshotDay(nowInfo) {
-  return {
-    date: nowInfo.dateKey,
-    weekday: nowInfo.weekday,
-    markets: {},
-  };
-}
-
-function rollSnapshotState(state, nowInfo) {
-  const normalized = normalizeSnapshotState(state);
-
-  if (!normalized.currentDay) {
-    normalized.currentDay = startSnapshotDay(nowInfo);
-    return normalized;
-  }
-
-  if (normalized.currentDay.date === nowInfo.dateKey) {
-    normalized.currentDay.weekday = nowInfo.weekday;
-    return normalized;
-  }
-
-  const completedDay = normalized.currentDay;
-  const completedWeekday = completedDay.weekday;
-  const isCompletedWeekday =
-    completedWeekday !== "Sat" && completedWeekday !== "Sun";
-
-  if (
-    isCompletedWeekday &&
-    completedDay.markets &&
-    Object.keys(completedDay.markets).length > 0
-  ) {
-    normalized.previousWeekdayClose = completedDay;
-
-    if (completedWeekday === "Fri") {
-      normalized.fridayClose = completedDay;
-    }
-  }
-
-  normalized.currentDay = startSnapshotDay(nowInfo);
-  return normalized;
-}
-
-function updateCurrentDayCloseCandidates(state, markets, capturedAt) {
-  if (!state.currentDay) {
-    return state;
-  }
-
-  for (const market of markets) {
-    if (market.stale || market.currentPrice == null) {
-      continue;
-    }
-
-    state.currentDay.markets[market.id] = {
-      marketId: market.marketId,
-      name: market.name,
-      url: market.url,
-      closePrice: market.currentPrice,
-      capturedAt,
-    };
-  }
-
-  return state;
-}
-
-function buildSeededMarkets(markets, capturedAt) {
-  const entries = markets
-    .filter((market) => !market.stale && market.pageBaselinePrice != null)
-    .map((market) => [
-      market.id,
-      {
-        marketId: market.marketId,
-        name: market.name,
-        url: market.url,
-        closePrice: market.pageBaselinePrice,
-        capturedAt,
-        seeded: true,
-      },
-    ]);
-
-  return Object.fromEntries(entries);
-}
-
-function seedMissingSnapshotBaselines(
-  state,
-  markets,
-  baselineMode,
-  nowInfo,
-  capturedAt,
-) {
-  const seededMarkets = buildSeededMarkets(markets, capturedAt);
-  if (Object.keys(seededMarkets).length === 0) {
-    return state;
-  }
-
-  if (!state.previousWeekdayClose) {
-    const previousWeekdayDate = findPreviousWeekdayDateKey(nowInfo.dateKey);
-    const previousWeekdayInfo = getDateKeyInfo(previousWeekdayDate);
-    state.previousWeekdayClose = {
-      date: previousWeekdayDate,
-      weekday: previousWeekdayInfo.weekday,
-      markets: seededMarkets,
-    };
-  }
-
-  const previousWeekdayDate = state.previousWeekdayClose?.date;
-  const fridayDate = findLastFridayDateKey(nowInfo.dateKey);
-  const canSeedFriday =
-    baselineMode.mode === "friday_close" || previousWeekdayDate === fridayDate;
-
-  if (!state.fridayClose && canSeedFriday) {
-    const fridayInfo = getDateKeyInfo(fridayDate);
-    state.fridayClose = {
-      date: fridayDate,
-      weekday: fridayInfo.weekday,
-      markets: seededMarkets,
-    };
-  }
-
-  return state;
-}
-
-function selectSnapshotBaseline(state, marketId, baselineMode) {
-  const sourceDay =
-    baselineMode.mode === "friday_close"
-      ? state.fridayClose
-      : state.previousWeekdayClose;
-
-  if (!sourceDay?.markets?.[marketId]) {
+function normalizeCloseSnapshot(snapshot) {
+  if (!snapshot || typeof snapshot !== "object") {
     return null;
   }
 
   return {
-    date: sourceDay.date,
-    weekday: sourceDay.weekday,
-    closePrice: sourceDay.markets[marketId].closePrice,
-    capturedAt: sourceDay.markets[marketId].capturedAt,
-    seeded: Boolean(sourceDay.markets[marketId].seeded),
+    date: snapshot.date ?? null,
+    weekday: snapshot.weekday ?? null,
+    closePrice:
+      snapshot.closePrice == null ? null : round(Number(snapshot.closePrice)),
+    capturedAt: snapshot.capturedAt ?? null,
+    seeded: Boolean(snapshot.seeded),
+  };
+}
+
+function hasCloseSnapshot(snapshot) {
+  return snapshot?.closePrice != null;
+}
+
+function normalizeMarketState(state, market) {
+  return {
+    timezone: market.baselineTimezone,
+    cutoverLabelJa: market.baselineCutoverLabelJa,
+    currentSession: normalizeCloseSnapshot(state?.currentSession),
+    previousClose: normalizeCloseSnapshot(state?.previousClose),
+    fridayClose: normalizeCloseSnapshot(state?.fridayClose),
+  };
+}
+
+function extractLegacyClose(dayState, market) {
+  const legacyMarket = dayState?.markets?.[market.id];
+  if (!legacyMarket) {
+    return null;
+  }
+
+  return normalizeCloseSnapshot({
+    date: dayState?.date ?? null,
+    weekday: dayState?.weekday ?? null,
+    closePrice: legacyMarket.closePrice,
+    capturedAt: legacyMarket.capturedAt,
+    seeded: legacyMarket.seeded,
+  });
+}
+
+function normalizeSnapshotState(state, markets) {
+  if (state?.version === BASELINE_STATE_VERSION && state?.markets) {
+    return {
+      version: BASELINE_STATE_VERSION,
+      markets: Object.fromEntries(
+        markets.map((market) => [
+          market.id,
+          normalizeMarketState(state.markets?.[market.id], market),
+        ]),
+      ),
+    };
+  }
+
+  return {
+    version: BASELINE_STATE_VERSION,
+    markets: Object.fromEntries(
+      markets.map((market) => [
+        market.id,
+        {
+          timezone: market.baselineTimezone,
+          cutoverLabelJa: market.baselineCutoverLabelJa,
+          currentSession: null,
+          previousClose: extractLegacyClose(state?.previousWeekdayClose, market),
+          fridayClose: extractLegacyClose(state?.fridayClose, market),
+        },
+      ]),
+    ),
+  };
+}
+
+function startMarketSession(nowInfo) {
+  return {
+    date: nowInfo.dateKey,
+    weekday: nowInfo.weekday,
+    closePrice: null,
+    capturedAt: null,
+    seeded: false,
+  };
+}
+
+function rollMarketState(state, nowInfo) {
+  if (!state.currentSession) {
+    state.currentSession = startMarketSession(nowInfo);
+    return state;
+  }
+
+  if (state.currentSession.date === nowInfo.dateKey) {
+    state.currentSession.weekday = nowInfo.weekday;
+    return state;
+  }
+
+  const completedSession = state.currentSession;
+  const completedWeekday = completedSession.weekday;
+  const isCompletedWeekday =
+    completedWeekday !== "Sat" && completedWeekday !== "Sun";
+
+  if (isCompletedWeekday && hasCloseSnapshot(completedSession)) {
+    state.previousClose = {
+      ...completedSession,
+      weekday: completedWeekday,
+    };
+
+    if (completedWeekday === "Fri") {
+      state.fridayClose = {
+        ...completedSession,
+        weekday: completedWeekday,
+      };
+    }
+  }
+
+  state.currentSession = startMarketSession(nowInfo);
+  return state;
+}
+
+function updateCurrentSessionCloseCandidate(state, market, capturedAt) {
+  if (!state.currentSession || market.stale || market.currentPrice == null) {
+    return state;
+  }
+
+  state.currentSession.closePrice = market.currentPrice;
+  state.currentSession.capturedAt = capturedAt;
+  state.currentSession.seeded = false;
+  return state;
+}
+
+function buildSeededCloseSnapshot(market, capturedAt) {
+  if (market.stale || market.pageBaselinePrice == null) {
+    return null;
+  }
+
+  return {
+    date: null,
+    weekday: null,
+    closePrice: market.pageBaselinePrice,
+    capturedAt,
+    seeded: true,
+  };
+}
+
+function seedMissingMarketBaselines(state, market, baselineMode, nowInfo, capturedAt) {
+  const seededSnapshot = buildSeededCloseSnapshot(market, capturedAt);
+  if (!seededSnapshot) {
+    return state;
+  }
+
+  if (!hasCloseSnapshot(state.previousClose)) {
+    const previousDate = findPreviousWeekdayDateKey(nowInfo.dateKey, state.timezone);
+    const previousInfo = getDateKeyInfo(previousDate, state.timezone);
+    state.previousClose = {
+      ...seededSnapshot,
+      date: previousDate,
+      weekday: previousInfo.weekday,
+    };
+  }
+
+  const previousDate = state.previousClose?.date;
+  const fridayDate = findLastFridayDateKey(nowInfo.dateKey, state.timezone);
+  const canSeedFriday =
+    baselineMode.mode === "friday_close" || previousDate === fridayDate;
+
+  if (!hasCloseSnapshot(state.fridayClose) && canSeedFriday) {
+    const fridayInfo = getDateKeyInfo(fridayDate, state.timezone);
+    state.fridayClose = {
+      ...seededSnapshot,
+      date: fridayDate,
+      weekday: fridayInfo.weekday,
+    };
+  }
+
+  return state;
+}
+
+function selectSnapshotBaseline(state, baselineMode) {
+  const source =
+    baselineMode.mode === "friday_close" ? state.fridayClose : state.previousClose;
+
+  if (!hasCloseSnapshot(source)) {
+    return null;
+  }
+
+  return {
+    date: source.date,
+    weekday: source.weekday,
+    closePrice: source.closePrice,
+    capturedAt: source.capturedAt,
+    seeded: Boolean(source.seeded),
   };
 }
 
@@ -259,6 +320,8 @@ function applyBaseline(record, baselineMode, snapshotBaseline) {
     fetchedAt: record.fetchedAt,
     baselineMode: baselineMode.mode,
     baselineLabelJa: baselineMode.labelJa,
+    baselineTimezone: record.baselineTimezone,
+    baselineCutoverLabelJa: record.baselineCutoverLabelJa,
     error: record.error,
   };
 
@@ -311,10 +374,16 @@ async function loadMarkets() {
     throw new Error("data/markets.json に監視対象がありません。");
   }
 
+  for (const market of markets) {
+    if (!market.baselineTimezone || !market.baselineCutoverLabelJa) {
+      throw new Error(`baseline 設定が不足しています: ${market.id}`);
+    }
+  }
+
   return markets;
 }
 
-function createFallbackRecord(market, previousRecord, reason, baselineMode) {
+function createFallbackRecord(market, previousRecord, reason) {
   if (previousRecord) {
     return {
       id: previousRecord.id ?? market.id,
@@ -334,6 +403,12 @@ function createFallbackRecord(market, previousRecord, reason, baselineMode) {
       stale: true,
       error: reason,
       fetchedAt: new Date().toISOString(),
+      baselineTimezone:
+        previousRecord.baselineTimezone ?? market.baselineTimezone ?? null,
+      baselineCutoverLabelJa:
+        previousRecord.baselineCutoverLabelJa ??
+        market.baselineCutoverLabelJa ??
+        null,
     };
   }
 
@@ -353,6 +428,8 @@ function createFallbackRecord(market, previousRecord, reason, baselineMode) {
     stale: true,
     error: reason,
     fetchedAt: new Date().toISOString(),
+    baselineTimezone: market.baselineTimezone,
+    baselineCutoverLabelJa: market.baselineCutoverLabelJa,
   };
 }
 
@@ -384,6 +461,10 @@ function buildHistoryRun(payload) {
       changePercent: market.changePercent,
       high: market.high,
       low: market.low,
+      baselineMode: market.baselineMode,
+      baselineLabelJa: market.baselineLabelJa,
+      baselineTimezone: market.baselineTimezone,
+      baselineCutoverLabelJa: market.baselineCutoverLabelJa,
       baselineSource: market.baselineSource,
       baselineSnapshotDate: market.baselineSnapshotDate ?? null,
       stale: Boolean(market.stale),
@@ -453,24 +534,49 @@ async function appendHistory(payload, nowInfo) {
   await writeJson(HISTORY_INDEX_FILE, historyIndex);
 }
 
+function summarizeBaselinePayload(markets) {
+  const uniqueModes = new Map();
+
+  for (const market of markets) {
+    const key = `${market.baselineMode}:${market.baselineLabelJa}`;
+    uniqueModes.set(key, {
+      mode: market.baselineMode,
+      labelJa: market.baselineLabelJa,
+    });
+  }
+
+  if (uniqueModes.size === 1) {
+    return [...uniqueModes.values()][0];
+  }
+
+  return {
+    mode: "mixed",
+    labelJa: "銘柄別",
+  };
+}
+
 async function main() {
   const now = resolveNow();
   const nowIso = now.toISOString();
-  const nowInfo = getTokyoDateInfo(now);
+  const nowInfo = getLocalDateInfo(now, TIME_ZONE);
   const markets = await loadMarkets();
   const previous = await readJson(OUTPUT_FILE, { markets: [] });
   const baselineState = normalizeSnapshotState(
     await readJson(BASELINE_STATE_FILE, {}),
+    markets,
   );
   const previousMap = new Map(
     (previous.markets || []).map((market) => [market.id, market]),
   );
-  const baselineMode = getBaselineMode(now);
 
   const settled = await Promise.allSettled(
     markets.map(async (market) => {
       const detail = await fetchMarketPage(market);
-      return detail;
+      return {
+        ...detail,
+        baselineTimezone: market.baselineTimezone,
+        baselineCutoverLabelJa: market.baselineCutoverLabelJa,
+      };
     }),
   );
 
@@ -483,54 +589,59 @@ async function main() {
 
     const reason =
       result.reason instanceof Error ? result.reason.message : String(result.reason);
-    return createFallbackRecord(
-      market,
-      previousMap.get(market.id),
-      reason,
-      baselineMode,
-    );
+    return createFallbackRecord(market, previousMap.get(market.id), reason);
   });
 
-  const rolledSnapshotState = rollSnapshotState(baselineState, nowInfo);
-  seedMissingSnapshotBaselines(
-    rolledSnapshotState,
-    rawMarkets,
-    baselineMode,
-    nowInfo,
-    nowIso,
-  );
-  updateCurrentDayCloseCandidates(
-    rolledSnapshotState,
-    rawMarkets.filter((market) => !market.stale),
-    nowIso,
-  );
+  const nextBaselineState = {
+    version: BASELINE_STATE_VERSION,
+    markets: {},
+  };
 
   const normalizedMarkets = rawMarkets.map((market) => {
-    const snapshotBaseline = selectSnapshotBaseline(
-      rolledSnapshotState,
-      market.id,
-      baselineMode,
+    const marketConfig = markets.find((entry) => entry.id === market.id) ?? market;
+    const marketState = normalizeMarketState(
+      baselineState.markets?.[market.id],
+      marketConfig,
     );
+    const marketNowInfo = getLocalDateInfo(now, marketState.timezone);
+    const baselineMode = getBaselineMode(now, marketConfig);
+
+    rollMarketState(marketState, marketNowInfo);
+    seedMissingMarketBaselines(
+      marketState,
+      market,
+      baselineMode,
+      marketNowInfo,
+      nowIso,
+    );
+    updateCurrentSessionCloseCandidate(marketState, market, nowIso);
+
+    nextBaselineState.markets[market.id] = marketState;
+
+    const snapshotBaseline = selectSnapshotBaseline(marketState, baselineMode);
     return applyBaseline(market, baselineMode, snapshotBaseline);
   });
 
+  const baselineSummary = summarizeBaselinePayload(normalizedMarkets);
   const payload = {
     updatedAt: nowIso,
     timezone: TIME_ZONE,
-    baselineMode: baselineMode.mode,
-    baselineLabelJa: baselineMode.labelJa,
+    baselineMode: baselineSummary.mode,
+    baselineLabelJa: baselineSummary.labelJa,
     source: "ig.com",
     markets: normalizedMarkets,
   };
 
   await writeJson(OUTPUT_FILE, payload);
   await writeJson(SNAPSHOT_FILE, payload);
-  await writeJson(BASELINE_STATE_FILE, rolledSnapshotState);
+  await writeJson(BASELINE_STATE_FILE, nextBaselineState);
   await appendHistory(payload, nowInfo);
 
   const freshCount = normalizedMarkets.filter((market) => !market.stale).length;
   const staleCount = normalizedMarkets.length - freshCount;
-  console.log(`Updated ${freshCount} markets${staleCount ? `, stale ${staleCount}` : ""}`);
+  console.log(
+    `Updated ${freshCount} markets${staleCount ? `, stale ${staleCount}` : ""}`,
+  );
 }
 
 main().catch((error) => {

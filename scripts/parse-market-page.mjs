@@ -5,8 +5,6 @@ const REQUEST_HEADERS = {
   accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
 };
 
-const TOKYO_TIME_ZONE = "Asia/Tokyo";
-
 function extractField(html, fieldName) {
   const pattern = new RegExp(`data-field="${fieldName}">([^<]+)<`, "i");
   const match = html.match(pattern);
@@ -36,35 +34,6 @@ function round(value, digits = 2) {
   return Number(value.toFixed(digits));
 }
 
-function getTokyoWeekdayParts(date = new Date()) {
-  const formatter = new Intl.DateTimeFormat("en-US", {
-    timeZone: TOKYO_TIME_ZONE,
-    weekday: "short",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
-
-  return Object.fromEntries(
-    formatter.formatToParts(date).map((part) => [part.type, part.value]),
-  );
-}
-
-export function getBaselineMode(date = new Date()) {
-  const parts = getTokyoWeekdayParts(date);
-  if (parts.weekday === "Sat" || parts.weekday === "Sun") {
-    return {
-      mode: "friday_close",
-      labelJa: "金曜終値基準",
-    };
-  }
-
-  return {
-    mode: "previous_close",
-    labelJa: "前日終値基準",
-  };
-}
-
 export function parseMarketPage(html, market, resolvedUrl = market.url) {
   const bid = parseNumber(extractField(html, "BID"));
   const offer = parseNumber(extractField(html, "OFR"));
@@ -81,7 +50,11 @@ export function parseMarketPage(html, market, resolvedUrl = market.url) {
 
   if (currentPrice != null && changePoints != null) {
     baselinePrice = round(currentPrice - changePoints, 4);
-  } else if (currentPrice != null && changePercent != null && changePercent !== -100) {
+  } else if (
+    currentPrice != null &&
+    changePercent != null &&
+    changePercent !== -100
+  ) {
     baselinePrice = round(currentPrice / (1 + changePercent / 100), 4);
   }
 
@@ -98,7 +71,7 @@ export function parseMarketPage(html, market, resolvedUrl = market.url) {
         : null;
 
   if (currentPrice == null) {
-    throw new Error(`価格フィールドを取得できませんでした: ${market.name}`);
+    throw new Error(`現在価格フィールドを取得できませんでした: ${market.name}`);
   }
 
   return {

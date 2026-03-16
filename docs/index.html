@@ -6,7 +6,7 @@
     <title>Weekend Monitor</title>
     <meta
       name="description"
-      content="IG weekend 11銘柄の現在価格と基準比をシンプルに監視するページ"
+      content="IG weekend markets の現在価格と前日終値基準をシンプルに確認するページ"
     />
     <link rel="stylesheet" href="./styles.css" />
   </head>
@@ -27,18 +27,18 @@
         </div>
         <div class="hero-meta">
           <p id="summary-text" class="summary-text">11 markets / loading</p>
-          <p id="updated-at" class="updated-at">更新時刻を取得中</p>
+          <p id="updated-at" class="updated-at">loading</p>
         </div>
       </header>
 
       <main>
         <section class="market-headline">
-          <div class="headline-cell">銘柄</div>
-          <div class="headline-cell align-right">現在価格</div>
-          <div class="headline-cell align-right">基準価格</div>
-          <div class="headline-cell align-right">変化量</div>
-          <div class="headline-cell align-right">変化率</div>
-          <div class="headline-cell align-right">リンク</div>
+          <div class="headline-cell">Market</div>
+          <div class="headline-cell align-right">Current</div>
+          <div class="headline-cell align-right">Baseline</div>
+          <div class="headline-cell align-right">Change</div>
+          <div class="headline-cell align-right">% Move</div>
+          <div class="headline-cell align-right">Link</div>
         </section>
 
         <section id="market-grid" class="market-grid" aria-live="polite"></section>
