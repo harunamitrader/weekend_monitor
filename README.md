@@ -1,5 +1,7 @@
 # Weekend Monitor
 
+公開ページ: https://harunamitrader.github.io/weekend_monitor/
+
 IG 証券の weekend 11 銘柄を 15 分ごとに取得し、GitHub Pages で公開するためのシンプルな監視ページです。
 
 平日は前営業日の終値、土日は金曜日の終値を基準に変化量を表示することを目標にしており、そのために日次の終値スナップショットを保存します。
