@@ -4,6 +4,39 @@ const marketGrid = document.querySelector("#market-grid");
 const summaryText = document.querySelector("#summary-text");
 const updatedAt = document.querySelector("#updated-at");
 const template = document.querySelector("#market-card-template");
+const MARKET_GROUPS = [
+  {
+    key: "stock-indices",
+    label: "Stock Indices",
+    ids: [
+      "weekend-us-tech-100-e1",
+      "weekend-wall-street",
+      "weekend-uk-100",
+      "weekend-germany-40",
+      "weekend-hongkong-hs50",
+      "weekend-australia-200",
+    ],
+  },
+  {
+    key: "commodities",
+    label: "Commodities",
+    ids: [
+      "weekend-gold",
+      "weekend-spot-silver",
+      "weekend-oil---us-crude",
+    ],
+  },
+  {
+    key: "fx",
+    label: "FX",
+    ids: ["weekend-usdjpy", "weekend-eurusd"],
+  },
+  {
+    key: "crypto",
+    label: "Crypto",
+    ids: ["bitcoin-usd", "ether-usd", "crypto-10-index"],
+  },
+];
 
 function formatNumber(value, digits = 2) {
   if (value == null || Number.isNaN(value)) {
@@ -100,6 +133,49 @@ function renderMarket(market) {
   return fragment;
 }
 
+function renderGroupHeading(label, count) {
+  const heading = document.createElement("div");
+  heading.className = "market-group-heading";
+  heading.innerHTML = `
+    <span class="market-group-label">${label}</span>
+    <span class="market-group-count">${count} markets</span>
+  `;
+  return heading;
+}
+
+function groupMarkets(markets) {
+  const byId = new Map(markets.map((market) => [market.id, market]));
+  const groups = [];
+  const seen = new Set();
+
+  for (const group of MARKET_GROUPS) {
+    const items = group.ids
+      .map((id) => byId.get(id))
+      .filter(Boolean);
+
+    for (const market of items) {
+      seen.add(market.id);
+    }
+
+    if (items.length > 0) {
+      groups.push({
+        label: group.label,
+        markets: items,
+      });
+    }
+  }
+
+  const remaining = markets.filter((market) => !seen.has(market.id));
+  if (remaining.length > 0) {
+    groups.push({
+      label: "Other Markets",
+      markets: remaining,
+    });
+  }
+
+  return groups;
+}
+
 function renderEmpty(message) {
   marketGrid.innerHTML = `<p class="empty-state">${message}</p>`;
 }
@@ -126,10 +202,15 @@ async function main() {
       return;
     }
 
+    const groups = groupMarkets(markets);
+
     marketGrid.innerHTML = "";
     const fragment = document.createDocumentFragment();
-    for (const market of markets) {
-      fragment.append(renderMarket(market));
+    for (const group of groups) {
+      fragment.append(renderGroupHeading(group.label, group.markets.length));
+      for (const market of group.markets) {
+        fragment.append(renderMarket(market));
+      }
     }
     marketGrid.append(fragment);
   } catch (error) {

@@ -2,7 +2,7 @@
 
 公開ページ: https://harunamitrader.github.io/weekend_monitor/
 
-IG 証券の weekend 11 銘柄を 15 分ごとに取得し、GitHub Pages で公開するためのシンプルな監視ページです。
+IG 証券の weekend 14 銘柄を 15 分ごとに取得し、GitHub Pages で公開するためのシンプルな監視ページです。
 
 平日は前営業日の終値、土日は金曜日の終値を基準に変化量を表示することを目標にしており、そのために日次の終値スナップショットを保存します。
 
@@ -11,7 +11,7 @@ IG 証券の weekend 11 銘柄を 15 分ごとに取得し、GitHub Pages で公
 - `docs/`: 公開用の静的ページ
 - `docs/data/latest.json`: フロントエンドが読む最新データ
 - `scripts/`: スクレイピングとデータ生成スクリプト
-- `data/markets.json`: 監視対象 11 銘柄の固定定義
+- `data/markets.json`: 監視対象 14 銘柄の固定定義
 - `data/snapshots/baselines.json`: 前日終値・金曜終値の保存状態
 - `data/history/YYYY-MM-DD.json`: 15 分ごとの価格履歴
 - `data/history/index.json`: 履歴ファイル一覧
@@ -32,7 +32,7 @@ $env:BUILD_NOW="2026-03-21T00:05:00+09:00"
 npm run build:data
 ```
 
-監視対象の 11 銘柄 URL は `data/markets.json` に固定で保持しており、検索ページから自動再取得はしない。
+監視対象の 14 銘柄 URL は `data/markets.json` に固定で保持しており、検索ページから自動再取得はしない。
 
 ## 基準価格ロジック
 
@@ -62,7 +62,7 @@ npm run build:data
 ### 保存形式
 
 - `data/history/YYYY-MM-DD.json` に、その日の取得ランを時系列で追加する
-- 1 ランごとに 11 銘柄ぶんの価格データを保存する
+- 1 ランごとに 14 銘柄ぶんの価格データを保存する
 - `data/history/index.json` に、保存済み日付とラン数をまとめる
 
 ### 1 ランで保存する内容
@@ -99,7 +99,7 @@ npm run build:data
 
 ### 公開確認
 
-- GitHub Pages 上で 11 銘柄が表示される
+- GitHub Pages 上で 14 銘柄が表示される
 - 最終更新時刻が出る
 - 各銘柄の `Open` ボタンで IG ページへ飛べる
 - スナップショットが溜まった後は `fallback` 表示が減る

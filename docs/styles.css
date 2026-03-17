@@ -122,6 +122,33 @@ h1 {
   display: grid;
 }
 
+.market-group-heading {
+  margin-top: 22px;
+  padding: 0 20px 10px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.market-group-label,
+.market-group-count {
+  font-family: "IBM Plex Mono", monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.market-group-label {
+  font-size: 0.76rem;
+  color: var(--ink);
+}
+
+.market-group-count {
+  font-size: 0.68rem;
+  color: var(--muted);
+}
+
 .market-card {
   display: grid;
   grid-template-columns: minmax(220px, 2.4fr) repeat(4, minmax(120px, 1fr)) 96px;
@@ -221,6 +248,11 @@ h1 {
     display: none;
   }
 
+  .market-group-heading {
+    margin-top: 18px;
+    padding: 0 0 8px;
+  }
+
   .market-card {
     grid-template-columns: repeat(4, minmax(0, 1fr)) 72px;
     gap: 10px 12px;
@@ -308,6 +340,19 @@ h1 {
     justify-content: space-between;
     gap: 10px;
     font-size: 0.7rem;
+  }
+
+  .market-group-heading {
+    margin-top: 16px;
+    padding-bottom: 6px;
+  }
+
+  .market-group-label {
+    font-size: 0.66rem;
+  }
+
+  .market-group-count {
+    font-size: 0.58rem;
   }
 
   .summary-text,
