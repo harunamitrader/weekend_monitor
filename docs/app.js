@@ -31,7 +31,7 @@ function formatUpdatedAt(value, timezone) {
     return "更新時刻なし";
   }
 
-  return new Intl.DateTimeFormat("ja-JP", {
+  const formatted = new Intl.DateTimeFormat("ja-JP", {
     timeZone: timezone,
     year: "numeric",
     month: "2-digit",
@@ -39,6 +39,8 @@ function formatUpdatedAt(value, timezone) {
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date(value));
+
+  return `${formatted} JST`;
 }
 
 function applyMoveClass(node, value) {
