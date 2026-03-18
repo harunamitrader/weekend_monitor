@@ -272,13 +272,13 @@ h1 {
   }
 
   .market-metric {
-    align-items: flex-start;
+    align-items: flex-end;
     padding: 0;
-    gap: 4px;
+    gap: 2px;
   }
 
   .metric-label {
-    display: block;
+    display: none;
   }
 
   .market-name {
@@ -289,17 +289,17 @@ h1 {
 
   .market-baseline {
     margin-top: 6px;
-    font-size: 0.62rem;
-    letter-spacing: 0.06em;
+    font-size: 0.58rem;
+    letter-spacing: 0.04em;
   }
 
   .metric-value {
-    font-size: 0.92rem;
+    font-size: 0.84rem;
   }
 
   .market-link {
-    padding: 10px 0;
-    font-size: 0.68rem;
+    padding: 8px 0;
+    font-size: 0.62rem;
   }
 }
 
@@ -387,13 +387,8 @@ h1 {
     line-height: 1.25;
   }
 
-  .metric-label {
-    font-size: 0.52rem;
-    letter-spacing: 0.04em;
-  }
-
   .metric-value {
-    font-size: 0.76rem;
+    font-size: 0.7rem;
     letter-spacing: -0.02em;
   }
 
@@ -432,6 +427,6 @@ h1 {
   }
 
   .metric-value {
-    font-size: 0.72rem;
+    font-size: 0.66rem;
   }
 }
