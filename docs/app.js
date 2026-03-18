@@ -289,7 +289,7 @@ function buildChartGeometry(
   const plotWidth = plotRight - plotLeft;
   const plotHeight = plotBottom - plotTop;
   const timeSpan = Math.max(maxTimestamp - minTimestamp, 1);
-  const priceSpan = Math.max(maxPrice - minPrice, 1);
+  const priceSpan = Math.max(maxPrice - minPrice, Number.EPSILON);
 
   return {
     minTimestamp,
