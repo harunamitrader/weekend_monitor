@@ -1,7 +1,7 @@
 const DATA_URL = "./data/latest.json";
 const CHART_DATA_URL = "./data/chart-series.json";
 const SVG_NS = "http://www.w3.org/2000/svg";
-const REFRESH_INTERVAL_MS = 60 * 1000;
+const REFRESH_INTERVAL_MS = 30 * 1000;
 
 const marketGrid = document.querySelector("#market-grid");
 const summaryText = document.querySelector("#summary-text");
@@ -775,16 +775,29 @@ async function refreshData(options = {}) {
   renderPage(latestPayload, chartPayload);
 }
 
+function startAutoRefresh() {
+  const runRefresh = () => {
+    void refreshData().catch((error) => {
+      console.error(error instanceof Error ? error.message : String(error));
+    });
+  };
+
+  window.setInterval(runRefresh, REFRESH_INTERVAL_MS);
+  window.addEventListener("focus", runRefresh);
+  window.addEventListener("pageshow", runRefresh);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      runRefresh();
+    }
+  });
+}
+
 async function main() {
   bindDialogEvents();
 
   try {
     await refreshData();
-    window.setInterval(() => {
-      void refreshData({ silent: true }).catch((error) => {
-        console.error(error instanceof Error ? error.message : String(error));
-      });
-    }, REFRESH_INTERVAL_MS);
+    startAutoRefresh();
   } catch (error) {
     summaryText.textContent = "データ取得不可";
     updatedAt.textContent = "更新に失敗しました";
