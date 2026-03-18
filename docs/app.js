@@ -4,10 +4,11 @@ const marketGrid = document.querySelector("#market-grid");
 const summaryText = document.querySelector("#summary-text");
 const updatedAt = document.querySelector("#updated-at");
 const template = document.querySelector("#market-card-template");
+
 const MARKET_GROUPS = [
   {
     key: "stock-indices",
-    label: "Stock Indices",
+    label: "株価指数",
     ids: [
       "weekend-us-tech-100-e1",
       "weekend-wall-street",
@@ -19,7 +20,7 @@ const MARKET_GROUPS = [
   },
   {
     key: "commodities",
-    label: "Commodities",
+    label: "商品",
     ids: [
       "weekend-gold",
       "weekend-spot-silver",
@@ -28,12 +29,12 @@ const MARKET_GROUPS = [
   },
   {
     key: "fx",
-    label: "FX",
+    label: "為替",
     ids: ["weekend-usdjpy", "weekend-eurusd"],
   },
   {
     key: "crypto",
-    label: "Crypto",
+    label: "暗号資産",
     ids: ["bitcoin-usd", "ether-usd", "crypto-10-index"],
   },
 ];
@@ -94,11 +95,11 @@ function buildBaselineText(market) {
   }
 
   if (!String(market.baselineSource || "").startsWith("snapshot")) {
-    parts.push("fallback");
+    parts.push("代替値");
   }
 
   if (market.stale) {
-    parts.push("stale");
+    parts.push("古い値");
   }
 
   return parts.join(" / ");
@@ -138,7 +139,7 @@ function renderGroupHeading(label, count) {
   heading.className = "market-group-heading";
   heading.innerHTML = `
     <span class="market-group-label">${label}</span>
-    <span class="market-group-count">${count} markets</span>
+    <span class="market-group-count">${count}銘柄</span>
   `;
   return heading;
 }
@@ -149,9 +150,7 @@ function groupMarkets(markets) {
   const seen = new Set();
 
   for (const group of MARKET_GROUPS) {
-    const items = group.ids
-      .map((id) => byId.get(id))
-      .filter(Boolean);
+    const items = group.ids.map((id) => byId.get(id)).filter(Boolean);
 
     for (const market of items) {
       seen.add(market.id);
@@ -168,7 +167,7 @@ function groupMarkets(markets) {
   const remaining = markets.filter((market) => !seen.has(market.id));
   if (remaining.length > 0) {
     groups.push({
-      label: "Other Markets",
+      label: "その他",
       markets: remaining,
     });
   }
@@ -194,7 +193,7 @@ async function main() {
     const payload = await loadData();
     const markets = Array.isArray(payload.markets) ? payload.markets : [];
 
-    summaryText.textContent = `${markets.length} markets / ${payload.baselineLabelJa || "前日終値"}`;
+    summaryText.textContent = `${markets.length}銘柄 / ${payload.baselineLabelJa || "前日終値"}`;
     updatedAt.textContent = `最終更新 ${formatUpdatedAt(payload.updatedAt, payload.timezone || "Asia/Tokyo")}`;
 
     if (markets.length === 0) {
@@ -214,7 +213,7 @@ async function main() {
     }
     marketGrid.append(fragment);
   } catch (error) {
-    summaryText.textContent = "data unavailable";
+    summaryText.textContent = "データ取得不可";
     updatedAt.textContent = "更新に失敗しました";
     renderEmpty(error instanceof Error ? error.message : "読み込みエラー");
   }

@@ -6,7 +6,7 @@
     <title>Weekend Monitor</title>
     <meta
       name="description"
-      content="IG weekend markets の現在価格と前日終値基準をシンプルに確認するページ"
+      content="IG weekend markets の現在値と前日終値をシンプルに確認するページ"
     />
     <link rel="stylesheet" href="./styles.css" />
   </head>
@@ -26,19 +26,19 @@
           </a>
         </div>
         <div class="hero-meta">
-          <p id="summary-text" class="summary-text">14 markets / loading</p>
-          <p id="updated-at" class="updated-at">loading</p>
+          <p id="summary-text" class="summary-text">14 銘柄 / 読み込み中</p>
+          <p id="updated-at" class="updated-at">読み込み中</p>
         </div>
       </header>
 
       <main>
         <section class="market-headline">
-          <div class="headline-cell">Market</div>
-          <div class="headline-cell align-right">Current</div>
-          <div class="headline-cell align-right">Baseline</div>
-          <div class="headline-cell align-right">Change</div>
-          <div class="headline-cell align-right">% Move</div>
-          <div class="headline-cell align-right">Link</div>
+          <div class="headline-cell">銘柄</div>
+          <div class="headline-cell align-right">現在値</div>
+          <div class="headline-cell align-right">基準値</div>
+          <div class="headline-cell align-right">前日比</div>
+          <div class="headline-cell align-right">変化率</div>
+          <div class="headline-cell align-right">リンク</div>
         </section>
 
         <section id="market-grid" class="market-grid" aria-live="polite"></section>
@@ -52,23 +52,23 @@
           <p class="market-baseline"></p>
         </div>
         <div class="market-metric">
-          <span class="metric-label">Current</span>
+          <span class="metric-label">現在値</span>
           <span class="metric-value current-price"></span>
         </div>
         <div class="market-metric">
-          <span class="metric-label">Baseline</span>
+          <span class="metric-label">基準値</span>
           <span class="metric-value baseline-price"></span>
         </div>
         <div class="market-metric">
-          <span class="metric-label">Change</span>
+          <span class="metric-label">前日比</span>
           <span class="metric-value change-value"></span>
         </div>
         <div class="market-metric">
-          <span class="metric-label">% Move</span>
+          <span class="metric-label">変化率</span>
           <span class="metric-value change-percent"></span>
         </div>
         <div class="market-actions">
-          <a class="market-link" target="_blank" rel="noreferrer">Open</a>
+          <a class="market-link" target="_blank" rel="noreferrer">開く</a>
         </div>
       </article>
     </template>
