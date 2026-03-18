@@ -316,6 +316,32 @@ function buildPolyline(coords) {
   return coords.map(({ x, y }) => `${x.toFixed(2)},${y.toFixed(2)}`).join(" ");
 }
 
+function splitCoordsByTimestamp(coords, cutoffTimestamp) {
+  if (!cutoffTimestamp || !Number.isFinite(cutoffTimestamp)) {
+    return {
+      before: coords,
+      after: [],
+    };
+  }
+
+  const before = [];
+  const after = [];
+
+  for (const coord of coords) {
+    if (Date.parse(coord.point.t) <= cutoffTimestamp) {
+      before.push(coord);
+    } else {
+      after.push(coord);
+    }
+  }
+
+  if (before.length && after.length) {
+    after.unshift(before.at(-1));
+  }
+
+  return { before, after };
+}
+
 function getPriceY(geometry, value) {
   if (value == null || !Number.isFinite(Number(value))) {
     return null;
@@ -413,12 +439,28 @@ function renderSparkline(svg, points, options = {}) {
 
   appendReferenceLines(svg, geometry, options.referenceLines);
 
-  svg.append(
-    createSvgNode("polyline", {
-      points: buildPolyline(geometry.coords),
-      class: "chart-line",
-    }),
+  const segments = splitCoordsByTimestamp(
+    geometry.coords,
+    options.highlightAfter ? Date.parse(options.highlightAfter) : null,
   );
+
+  if (segments.before.length > 1) {
+    svg.append(
+      createSvgNode("polyline", {
+        points: buildPolyline(segments.before),
+        class: "chart-line",
+      }),
+    );
+  }
+
+  if (segments.after.length > 1) {
+    svg.append(
+      createSvgNode("polyline", {
+        points: buildPolyline(segments.after),
+        class: "chart-line chart-line-current",
+      }),
+    );
+  }
 }
 
 function renderDetailedChart(svg, points, timezone, options = {}) {
@@ -524,12 +566,28 @@ function renderDetailedChart(svg, points, timezone, options = {}) {
 
   appendReferenceLines(svg, geometry, options.referenceLines);
 
-  svg.append(
-    createSvgNode("polyline", {
-      points: buildPolyline(geometry.coords),
-      class: "chart-line",
-    }),
+  const segments = splitCoordsByTimestamp(
+    geometry.coords,
+    options.highlightAfter ? Date.parse(options.highlightAfter) : null,
   );
+
+  if (segments.before.length > 1) {
+    svg.append(
+      createSvgNode("polyline", {
+        points: buildPolyline(segments.before),
+        class: "chart-line",
+      }),
+    );
+  }
+
+  if (segments.after.length > 1) {
+    svg.append(
+      createSvgNode("polyline", {
+        points: buildPolyline(segments.after),
+        class: "chart-line chart-line-current",
+      }),
+    );
+  }
 }
 
 function updateChartDialog(market, chartPayload, timezone) {
@@ -553,6 +611,7 @@ function updateChartDialog(market, chartPayload, timezone) {
     renderDetailedChart(chartDialogSvg, points, timezone, {
       width: 800,
       height: 450,
+      highlightAfter: market.baselineSnapshotCapturedAt,
       referenceLines: [
         { value: market.baselinePrice, className: "is-baseline", label: "基準値" },
         { value: market.currentPrice, className: "is-current", label: "現在値" },
@@ -609,6 +668,7 @@ function renderMarket(market, chartPayload, timezone) {
   renderSparkline(sparklineSvg, sparklinePoints, {
     width: 192,
     height: 108,
+    highlightAfter: market.baselineSnapshotCapturedAt,
     referenceLines: [
       { value: market.baselinePrice, className: "is-baseline" },
       { value: market.currentPrice, className: "is-current" },

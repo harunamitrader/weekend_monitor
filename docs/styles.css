@@ -259,6 +259,10 @@ h1 {
   stroke: #2563eb;
 }
 
+.chart-line-current {
+  stroke: #dc2626;
+}
+
 .chart-empty-text {
   fill: var(--muted);
   font-family: "IBM Plex Mono", monospace;
