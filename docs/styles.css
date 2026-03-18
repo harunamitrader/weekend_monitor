@@ -338,21 +338,21 @@ h1 {
     flex-direction: row;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 10px;
-    font-size: 0.7rem;
-  }
-
-  .market-group-heading {
-    margin-top: 16px;
-    padding-bottom: 6px;
-  }
-
-  .market-group-label {
+    gap: 8px;
     font-size: 0.66rem;
   }
 
+  .market-group-heading {
+    margin-top: 14px;
+    padding-bottom: 5px;
+  }
+
+  .market-group-label {
+    font-size: 0.62rem;
+  }
+
   .market-group-count {
-    font-size: 0.58rem;
+    font-size: 0.54rem;
   }
 
   .summary-text,
@@ -361,45 +361,47 @@ h1 {
   }
 
   .market-card {
-    grid-template-columns: repeat(4, minmax(0, 1fr)) 58px;
-    gap: 8px 8px;
-    padding: 12px 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) 54px;
+    gap: 6px 8px;
+    padding: 10px 0;
   }
 
   .market-title-group {
-    grid-column: 1 / 5;
+    grid-column: 1 / 3;
   }
 
   .market-actions {
-    grid-column: 5;
-    grid-row: 1;
+    grid-column: 3;
+    grid-row: 1 / span 3;
+    align-self: start;
   }
 
   .market-name {
-    font-size: 0.88rem;
+    font-size: 0.84rem;
     max-width: none;
     padding-right: 4px;
   }
 
   .market-baseline {
     margin-top: 4px;
-    font-size: 0.56rem;
+    font-size: 0.52rem;
+    line-height: 1.25;
   }
 
   .metric-label {
-    font-size: 0.56rem;
+    font-size: 0.52rem;
     letter-spacing: 0.04em;
   }
 
   .metric-value {
-    font-size: 0.8rem;
+    font-size: 0.76rem;
     letter-spacing: -0.02em;
   }
 
   .market-link {
-    min-height: 34px;
-    padding: 8px 0;
-    font-size: 0.62rem;
+    min-height: 32px;
+    padding: 6px 0;
+    font-size: 0.58rem;
   }
 
   .empty-state {
@@ -414,18 +416,23 @@ h1 {
 
   .hero-meta {
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
   }
 
   .market-card {
-    grid-template-columns: repeat(4, minmax(0, 1fr)) 52px;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) 50px;
+    gap: 6px 6px;
   }
 
   .market-name {
-    font-size: 0.84rem;
+    font-size: 0.8rem;
+  }
+
+  .market-group-count {
+    display: none;
   }
 
   .metric-value {
-    font-size: 0.76rem;
+    font-size: 0.72rem;
   }
 }
