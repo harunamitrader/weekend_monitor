@@ -261,7 +261,7 @@ function buildChartGeometry(
   width,
   height,
   padding,
-  referencePrices = [],
+  _referencePrices = [],
   priceScale = null,
 ) {
   if (!points.length) {
@@ -270,13 +270,10 @@ function buildChartGeometry(
 
   const timestamps = points.map((point) => Date.parse(point.t));
   const prices = points.map((point) => point.price);
-  const extraPrices = referencePrices.filter(
-    (price) => price != null && Number.isFinite(Number(price)),
-  );
   const minTimestamp = Math.min(...timestamps);
   const maxTimestamp = Math.max(...timestamps);
-  const actualMinPrice = Math.min(...prices, ...extraPrices);
-  const actualMaxPrice = Math.max(...prices, ...extraPrices);
+  const actualMinPrice = Math.min(...prices);
+  const actualMaxPrice = Math.max(...prices);
   const pricePadding =
     actualMinPrice === actualMaxPrice
       ? Math.max(Math.abs(actualMinPrice) * 0.002, 1)
@@ -328,8 +325,9 @@ function getPriceY(geometry, value) {
     geometry.maxPrice === geometry.minPrice
       ? 0.5
       : (Number(value) - geometry.minPrice) / (geometry.maxPrice - geometry.minPrice);
+  const clampedRatio = Math.min(Math.max(ratio, 0), 1);
 
-  return geometry.plotBottom - ratio * geometry.plotHeight;
+  return geometry.plotBottom - clampedRatio * geometry.plotHeight;
 }
 
 function appendReferenceLines(svg, geometry, referenceLines = []) {
