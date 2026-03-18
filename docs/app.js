@@ -414,19 +414,18 @@ function renderMarket(market, chartPayload, timezone) {
   const baselinePrice = fragment.querySelector(".baseline-price");
   const changeValue = fragment.querySelector(".change-value");
   const changePercent = fragment.querySelector(".change-percent");
-  const marketLink = fragment.querySelector(".market-link");
   const chartTrigger = fragment.querySelector(".chart-trigger");
   const sparklineSvg = fragment.querySelector(".chart-sparkline");
   const sparklinePoints = getChartPoints(chartPayload, market.id, "points24h");
   const detailPoints = getChartPoints(chartPayload, market.id, "points72h");
 
   marketName.textContent = market.name;
+  marketName.href = market.url;
   marketBaseline.textContent = buildBaselineText(market);
   currentPrice.textContent = formatNumber(market.currentPrice, 4);
   baselinePrice.textContent = formatNumber(market.baselinePrice, 4);
   changeValue.textContent = formatSigned(market.change, 4);
   changePercent.textContent = formatSigned(market.changePercent, 2, "%");
-  marketLink.href = market.url;
 
   chartTrigger.setAttribute("aria-label", `${market.name} の過去72時間チャートを開く`);
   chartTrigger.disabled = detailPoints.length === 0;

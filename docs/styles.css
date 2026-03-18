@@ -111,7 +111,7 @@ h1 {
 .market-headline {
   margin-top: 20px;
   display: grid;
-  grid-template-columns: minmax(220px, 2.4fr) repeat(4, minmax(120px, 1fr)) 96px;
+  grid-template-columns: minmax(220px, 2.4fr) repeat(4, minmax(120px, 1fr));
   gap: 20px;
   padding: 0 20px 12px;
   color: var(--muted);
@@ -151,7 +151,7 @@ h1 {
 
 .market-card {
   display: grid;
-  grid-template-columns: minmax(220px, 2.4fr) repeat(4, minmax(120px, 1fr)) 96px;
+  grid-template-columns: minmax(220px, 2.4fr) repeat(4, minmax(120px, 1fr));
   gap: 20px;
   align-items: center;
   padding: 20px;
@@ -166,8 +166,7 @@ h1 {
 }
 
 .market-title-group,
-.market-metric,
-.market-actions {
+.market-metric {
   min-width: 0;
 }
 
@@ -175,6 +174,12 @@ h1 {
   margin: 0;
   font-size: 1rem;
   font-weight: 600;
+}
+
+.market-name-link:hover,
+.market-name-link:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 0.14em;
 }
 
 .market-baseline {
@@ -200,25 +205,6 @@ h1 {
   font-size: 1.02rem;
   font-weight: 500;
   white-space: nowrap;
-}
-
-.market-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  border: 1px solid var(--ink);
-  padding: 12px 0;
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 0.76rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.market-link:hover {
-  background: var(--ink);
-  color: var(--surface);
 }
 
 .market-chart-row {
@@ -401,7 +387,7 @@ h1 {
 @media (max-width: 980px) {
   .market-headline {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr)) 72px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 6px 12px;
     margin-top: 16px;
     padding: 0 0 8px;
@@ -412,18 +398,13 @@ h1 {
     text-align: left;
   }
 
-  .market-headline .headline-cell:last-child {
-    grid-column: 5;
-    text-align: center;
-  }
-
   .market-group-heading {
     margin-top: 18px;
     padding: 0 0 8px;
   }
 
   .market-card {
-    grid-template-columns: repeat(4, minmax(0, 1fr)) 72px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 10px 12px;
     padding: 14px 0;
     background: transparent;
@@ -432,12 +413,6 @@ h1 {
   .market-title-group {
     grid-column: 1 / 5;
     padding: 0;
-  }
-
-  .market-actions {
-    grid-column: 5;
-    grid-row: 1;
-    align-self: start;
   }
 
   .market-metric {
@@ -466,11 +441,6 @@ h1 {
 
   .metric-value {
     font-size: 0.84rem;
-  }
-
-  .market-link {
-    padding: 8px 0;
-    font-size: 0.62rem;
   }
 
   .market-chart-row {
@@ -532,9 +502,13 @@ h1 {
   }
 
   .market-headline {
-    grid-template-columns: repeat(4, minmax(0, 1fr)) 54px;
-    gap: 4px 8px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px 6px;
     padding-bottom: 6px;
+  }
+
+  .market-headline .headline-cell:first-child {
+    grid-column: 1 / 5;
   }
 
   .market-headline .headline-cell {
@@ -555,7 +529,7 @@ h1 {
   }
 
   .market-card {
-    grid-template-columns: repeat(4, minmax(0, 1fr)) 48px 88px;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) 88px;
     gap: 4px 6px;
     padding: 8px 0;
     align-items: start;
@@ -566,13 +540,8 @@ h1 {
     grid-row: 1;
   }
 
-  .market-actions {
-    grid-column: 5;
-    grid-row: 1;
-  }
-
   .market-chart-row {
-    grid-column: 6;
+    grid-column: 5;
     grid-row: 1 / span 2;
     margin-top: 0;
     align-self: start;
@@ -603,12 +572,6 @@ h1 {
     letter-spacing: -0.02em;
   }
 
-  .market-link {
-    min-height: 30px;
-    padding: 5px 0;
-    font-size: 0.56rem;
-  }
-
   .chart-trigger {
     width: 88px;
     gap: 4px;
@@ -636,13 +599,13 @@ h1 {
   }
 
   .market-card {
-    grid-template-columns: repeat(4, minmax(0, 1fr)) 44px 74px;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) 74px;
     gap: 4px 5px;
   }
 
   .market-headline {
-    grid-template-columns: repeat(4, minmax(0, 1fr)) 50px;
-    gap: 4px 6px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px 5px;
   }
 
   .market-name {
@@ -659,11 +622,6 @@ h1 {
 
   .metric-label {
     display: none;
-  }
-
-  .market-link {
-    min-height: 28px;
-    font-size: 0.52rem;
   }
 
   .chart-trigger {

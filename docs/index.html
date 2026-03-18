@@ -8,7 +8,7 @@
       name="description"
       content="IG weekend markets の現在値と前日終値をシンプルに確認するページ"
     />
-    <link rel="stylesheet" href="./styles.css?v=20260318f" />
+    <link rel="stylesheet" href="./styles.css?v=20260318g" />
   </head>
   <body>
     <div class="page-shell">
@@ -38,7 +38,6 @@
           <div class="headline-cell align-right">基準値</div>
           <div class="headline-cell align-right">前日比</div>
           <div class="headline-cell align-right">変化率</div>
-          <div class="headline-cell align-right">リンク</div>
         </section>
 
         <section id="market-grid" class="market-grid" aria-live="polite"></section>
@@ -48,7 +47,7 @@
     <template id="market-card-template">
       <article class="market-card">
         <div class="market-title-group">
-          <p class="market-name"></p>
+          <a class="market-name market-name-link" target="_blank" rel="noreferrer"></a>
           <p class="market-baseline"></p>
         </div>
         <div class="market-metric">
@@ -66,9 +65,6 @@
         <div class="market-metric">
           <span class="metric-label">変化率</span>
           <span class="metric-value change-percent"></span>
-        </div>
-        <div class="market-actions">
-          <a class="market-link" target="_blank" rel="noreferrer">開く</a>
         </div>
         <div class="market-chart-row">
           <button type="button" class="chart-trigger">
