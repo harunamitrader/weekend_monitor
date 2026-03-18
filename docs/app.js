@@ -177,7 +177,86 @@ function getPriceDigits(points) {
   return 4;
 }
 
-function buildChartGeometry(points, width, height, padding, referencePrices = []) {
+function niceNumber(value, roundResult) {
+  const exponent = Math.floor(Math.log10(value));
+  const fraction = value / 10 ** exponent;
+  let niceFraction;
+
+  if (roundResult) {
+    if (fraction < 1.5) {
+      niceFraction = 1;
+    } else if (fraction < 3) {
+      niceFraction = 2;
+    } else if (fraction < 7) {
+      niceFraction = 5;
+    } else {
+      niceFraction = 10;
+    }
+  } else if (fraction <= 1) {
+    niceFraction = 1;
+  } else if (fraction <= 2) {
+    niceFraction = 2;
+  } else if (fraction <= 5) {
+    niceFraction = 5;
+  } else {
+    niceFraction = 10;
+  }
+
+  return niceFraction * 10 ** exponent;
+}
+
+function getNicePriceScale(min, max, tickCount = 5) {
+  const range = Math.max(max - min, 1e-9);
+  const step = niceNumber(range / Math.max(tickCount - 1, 1), true);
+  const niceMin = Math.floor(min / step) * step;
+  const niceMax = Math.ceil(max / step) * step;
+  const ticks = [];
+
+  for (let value = niceMin; value <= niceMax + step / 2; value += step) {
+    ticks.push(Number(value.toFixed(10)));
+  }
+
+  return {
+    min: niceMin,
+    max: niceMax,
+    step,
+    ticks,
+  };
+}
+
+function getNiceTimeTicks(minTimestamp, maxTimestamp, targetCount = 8) {
+  const intervals = [
+    15 * 60 * 1000,
+    30 * 60 * 1000,
+    60 * 60 * 1000,
+    2 * 60 * 60 * 1000,
+    3 * 60 * 60 * 1000,
+    6 * 60 * 60 * 1000,
+    12 * 60 * 60 * 1000,
+    24 * 60 * 60 * 1000,
+  ];
+  const span = Math.max(maxTimestamp - minTimestamp, 1);
+  const interval =
+    intervals.find((candidate) => span / candidate <= targetCount - 1) ??
+    intervals.at(-1);
+  const firstTick = Math.ceil(minTimestamp / interval) * interval;
+  const ticks = [];
+
+  for (let value = firstTick; value <= maxTimestamp; value += interval) {
+    ticks.push(value);
+  }
+
+  return ticks.length > 1 ? ticks : [minTimestamp, maxTimestamp];
+}
+
+function buildChartGeometry(
+  points,
+  width,
+  height,
+  padding,
+  referencePrices = [],
+  priceScale = null,
+) {
   if (!points.length) {
     return null;
   }
@@ -195,8 +274,10 @@ function buildChartGeometry(points, width, height, padding, referencePrices = []
     actualMinPrice === actualMaxPrice
       ? Math.max(Math.abs(actualMinPrice) * 0.002, 1)
       : 0;
-  const minPrice = actualMinPrice - pricePadding;
-  const maxPrice = actualMaxPrice + pricePadding;
+  const computedMinPrice = actualMinPrice - pricePadding;
+  const computedMaxPrice = actualMaxPrice + pricePadding;
+  const minPrice = priceScale?.min ?? computedMinPrice;
+  const maxPrice = priceScale?.max ?? computedMaxPrice;
   const plotLeft = padding.left;
   const plotRight = width - padding.right;
   const plotTop = padding.top;
@@ -318,24 +399,46 @@ function renderSparkline(svg, points, options = {}) {
 function renderDetailedChart(svg, points, timezone, options = {}) {
   const width = options.width ?? 800;
   const height = options.height ?? 450;
-  const geometry = buildChartGeometry(points, width, height, {
+  const padding = {
     top: options.paddingTop ?? 18,
     right: options.paddingRight ?? 12,
     bottom: options.paddingBottom ?? 38,
     left: options.paddingLeft ?? 64,
-  }, (options.referenceLines || []).map((line) => line.value));
+  };
+  const referencePrices = (options.referenceLines || []).map((line) => line.value);
+  const baseGeometry = buildChartGeometry(
+    points,
+    width,
+    height,
+    padding,
+    referencePrices,
+  );
 
-  if (!geometry) {
+  if (!baseGeometry) {
     renderEmptyChart(svg, width, height, "72時間の履歴なし");
     return;
   }
+
+  const priceScale = getNicePriceScale(
+    baseGeometry.minPrice,
+    baseGeometry.maxPrice,
+    5,
+  );
+  const geometry = buildChartGeometry(
+    points,
+    width,
+    height,
+    padding,
+    referencePrices,
+    priceScale,
+  );
 
   svg.replaceChildren();
   svg.classList.toggle("is-empty", points.length < 2);
 
   const priceDigits = getPriceDigits(points);
-  const yTicks = createTicks(geometry.minPrice, geometry.maxPrice, 5);
-  const xTicks = createTicks(geometry.minTimestamp, geometry.maxTimestamp, 4);
+  const yTicks = priceScale.ticks;
+  const xTicks = getNiceTimeTicks(geometry.minTimestamp, geometry.maxTimestamp, 8);
 
   for (const tickValue of yTicks) {
     const ratio =

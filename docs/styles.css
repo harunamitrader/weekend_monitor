@@ -271,8 +271,9 @@ h1 {
 }
 
 .chart-reference-line {
-  stroke-width: 1;
-  stroke-dasharray: 3 4;
+  stroke-width: 1.4;
+  stroke-dasharray: 4 4;
+  opacity: 0.95;
 }
 
 .chart-reference-line.is-current {
