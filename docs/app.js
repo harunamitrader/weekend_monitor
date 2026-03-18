@@ -159,87 +159,232 @@ function summarizeSeries(points) {
   };
 }
 
-function buildPolyline(points, width, height, paddingX, paddingY) {
+function getPriceDigits(points) {
+  const maxPrice = Math.max(...points.map((point) => Math.abs(point.price)));
+
+  if (maxPrice >= 10000) {
+    return 0;
+  }
+
+  if (maxPrice >= 1000) {
+    return 1;
+  }
+
+  if (maxPrice >= 100) {
+    return 2;
+  }
+
+  return 4;
+}
+
+function buildChartGeometry(points, width, height, padding) {
   if (!points.length) {
-    return "";
+    return null;
   }
 
   const timestamps = points.map((point) => Date.parse(point.t));
   const prices = points.map((point) => point.price);
-  const minX = Math.min(...timestamps);
-  const maxX = Math.max(...timestamps);
-  const minY = Math.min(...prices);
-  const maxY = Math.max(...prices);
-  const usableWidth = width - paddingX * 2;
-  const usableHeight = height - paddingY * 2;
-  const xSpan = Math.max(maxX - minX, 1);
-  const ySpan = maxY - minY;
+  const minTimestamp = Math.min(...timestamps);
+  const maxTimestamp = Math.max(...timestamps);
+  const actualMinPrice = Math.min(...prices);
+  const actualMaxPrice = Math.max(...prices);
+  const pricePadding =
+    actualMinPrice === actualMaxPrice
+      ? Math.max(Math.abs(actualMinPrice) * 0.002, 1)
+      : 0;
+  const minPrice = actualMinPrice - pricePadding;
+  const maxPrice = actualMaxPrice + pricePadding;
+  const plotLeft = padding.left;
+  const plotRight = width - padding.right;
+  const plotTop = padding.top;
+  const plotBottom = height - padding.bottom;
+  const plotWidth = plotRight - plotLeft;
+  const plotHeight = plotBottom - plotTop;
+  const timeSpan = Math.max(maxTimestamp - minTimestamp, 1);
+  const priceSpan = Math.max(maxPrice - minPrice, 1);
 
-  return points
-    .map((point, index) => {
-      const xValue = timestamps[index];
-      const yValue = prices[index];
-      const x = paddingX + ((xValue - minX) / xSpan) * usableWidth;
-      const normalizedY = ySpan === 0 ? 0.5 : (yValue - minY) / ySpan;
-      const y = paddingY + usableHeight - normalizedY * usableHeight;
-      return `${x.toFixed(2)},${y.toFixed(2)}`;
-    })
-    .join(" ");
+  return {
+    minTimestamp,
+    maxTimestamp,
+    minPrice,
+    maxPrice,
+    plotLeft,
+    plotRight,
+    plotTop,
+    plotBottom,
+    plotWidth,
+    plotHeight,
+    coords: points.map((point, index) => {
+      const x = plotLeft + ((timestamps[index] - minTimestamp) / timeSpan) * plotWidth;
+      const y =
+        plotBottom - ((prices[index] - minPrice) / priceSpan) * plotHeight;
+
+      return { x, y, point };
+    }),
+  };
 }
 
-function renderChart(svg, points, options = {}) {
-  const width = options.width ?? 160;
-  const height = options.height ?? 40;
-  const paddingX = options.paddingX ?? 3;
-  const paddingY = options.paddingY ?? 3;
+function buildPolyline(coords) {
+  return coords.map(({ x, y }) => `${x.toFixed(2)},${y.toFixed(2)}`).join(" ");
+}
+
+function createTicks(min, max, count) {
+  if (count <= 1) {
+    return [min];
+  }
+
+  const step = (max - min) / (count - 1);
+  return Array.from({ length: count }, (_, index) => min + step * index);
+}
+
+function renderEmptyChart(svg, width, height, message = "履歴なし") {
+  svg.replaceChildren();
+  svg.classList.add("is-empty");
+  svg.append(
+    createSvgNode("text", {
+      x: width / 2,
+      y: height / 2,
+      "text-anchor": "middle",
+      "dominant-baseline": "middle",
+      class: "chart-empty-text",
+    }),
+  );
+  svg.lastChild.textContent = message;
+}
+
+function renderSparkline(svg, points, options = {}) {
+  const width = options.width ?? 192;
+  const height = options.height ?? 108;
+  const geometry = buildChartGeometry(points, width, height, {
+    top: options.paddingTop ?? 8,
+    right: options.paddingRight ?? 8,
+    bottom: options.paddingBottom ?? 8,
+    left: options.paddingLeft ?? 8,
+  });
+
+  if (!geometry) {
+    renderEmptyChart(svg, width, height);
+    return;
+  }
 
   svg.replaceChildren();
   svg.classList.toggle("is-empty", points.length < 2);
 
-  if (!points.length) {
-    svg.append(
-      createSvgNode("text", {
-        x: width / 2,
-        y: height / 2,
-        "text-anchor": "middle",
-        "dominant-baseline": "middle",
-        class: "chart-empty-text",
-      }),
-    );
-    svg.lastChild.textContent = "履歴なし";
-    return;
-  }
-
-  if (options.showGuide) {
-    svg.append(
-      createSvgNode("line", {
-        x1: paddingX,
-        y1: height / 2,
-        x2: width - paddingX,
-        y2: height / 2,
-        class: "chart-guide-line",
-      }),
-    );
-  }
-
-  const polylinePoints = buildPolyline(points, width, height, paddingX, paddingY);
   const trendUp = points.at(-1).price >= points[0].price;
-
   svg.append(
     createSvgNode("polyline", {
-      points: polylinePoints,
+      points: buildPolyline(geometry.coords),
       class: `chart-line ${trendUp ? "is-positive" : "is-negative"}`,
     }),
   );
 
-  const [lastPoint] = polylinePoints.split(" ").slice(-1);
+  const lastPoint = geometry.coords.at(-1);
   if (lastPoint) {
-    const [cx, cy] = lastPoint.split(",");
     svg.append(
       createSvgNode("circle", {
-        cx,
-        cy,
-        r: options.pointRadius ?? 2.5,
+        cx: lastPoint.x.toFixed(2),
+        cy: lastPoint.y.toFixed(2),
+        r: options.pointRadius ?? 2.4,
+        class: `chart-endpoint ${trendUp ? "is-positive" : "is-negative"}`,
+      }),
+    );
+  }
+}
+
+function renderDetailedChart(svg, points, timezone, options = {}) {
+  const width = options.width ?? 800;
+  const height = options.height ?? 450;
+  const geometry = buildChartGeometry(points, width, height, {
+    top: options.paddingTop ?? 18,
+    right: options.paddingRight ?? 12,
+    bottom: options.paddingBottom ?? 38,
+    left: options.paddingLeft ?? 64,
+  });
+
+  if (!geometry) {
+    renderEmptyChart(svg, width, height, "72時間の履歴なし");
+    return;
+  }
+
+  svg.replaceChildren();
+  svg.classList.toggle("is-empty", points.length < 2);
+
+  const priceDigits = getPriceDigits(points);
+  const yTicks = createTicks(geometry.minPrice, geometry.maxPrice, 5);
+  const xTicks = createTicks(geometry.minTimestamp, geometry.maxTimestamp, 4);
+
+  for (const tickValue of yTicks) {
+    const ratio =
+      geometry.maxPrice === geometry.minPrice
+        ? 0.5
+        : (tickValue - geometry.minPrice) / (geometry.maxPrice - geometry.minPrice);
+    const y = geometry.plotBottom - ratio * geometry.plotHeight;
+
+    svg.append(
+      createSvgNode("line", {
+        x1: geometry.plotLeft,
+        y1: y.toFixed(2),
+        x2: geometry.plotRight,
+        y2: y.toFixed(2),
+        class: "chart-grid-line",
+      }),
+    );
+
+    svg.append(
+      createSvgNode("text", {
+        x: geometry.plotLeft - 8,
+        y: (y + 4).toFixed(2),
+        "text-anchor": "end",
+        class: "chart-axis-label",
+      }),
+    );
+    svg.lastChild.textContent = formatNumber(tickValue, priceDigits);
+  }
+
+  for (const tickValue of xTicks) {
+    const ratio =
+      geometry.maxTimestamp === geometry.minTimestamp
+        ? 0.5
+        : (tickValue - geometry.minTimestamp) /
+          (geometry.maxTimestamp - geometry.minTimestamp);
+    const x = geometry.plotLeft + ratio * geometry.plotWidth;
+
+    svg.append(
+      createSvgNode("line", {
+        x1: x.toFixed(2),
+        y1: geometry.plotTop,
+        x2: x.toFixed(2),
+        y2: geometry.plotBottom,
+        class: "chart-grid-line",
+      }),
+    );
+
+    svg.append(
+      createSvgNode("text", {
+        x: x.toFixed(2),
+        y: height - 10,
+        "text-anchor": "middle",
+        class: "chart-axis-label",
+      }),
+    );
+    svg.lastChild.textContent = formatChartTime(new Date(tickValue), timezone);
+  }
+
+  const trendUp = points.at(-1).price >= points[0].price;
+  svg.append(
+    createSvgNode("polyline", {
+      points: buildPolyline(geometry.coords),
+      class: `chart-line ${trendUp ? "is-positive" : "is-negative"}`,
+    }),
+  );
+
+  const lastPoint = geometry.coords.at(-1);
+  if (lastPoint) {
+    svg.append(
+      createSvgNode("circle", {
+        cx: lastPoint.x.toFixed(2),
+        cy: lastPoint.y.toFixed(2),
+        r: options.pointRadius ?? 3,
         class: `chart-endpoint ${trendUp ? "is-positive" : "is-negative"}`,
       }),
     );
@@ -261,24 +406,17 @@ function openChartDialog(market, chartPayload, timezone) {
     chartDialogMeta.textContent = "72時間分の履歴がまだありません。";
     chartDialogStart.textContent = "";
     chartDialogEnd.textContent = "";
-    renderChart(chartDialogSvg, [], {
-      width: 720,
-      height: 280,
-      paddingX: 18,
-      paddingY: 24,
-    });
+    renderDetailedChart(chartDialogSvg, [], timezone);
   } else {
+    const priceDigits = getPriceDigits(points);
     chartDialogMeta.textContent =
-      `最新 ${formatNumber(summary.latest, 4)} / 高値 ${formatNumber(summary.high, 4)} / 安値 ${formatNumber(summary.low, 4)}`;
+      `最新 ${formatNumber(summary.latest, priceDigits)} / 高値 ${formatNumber(summary.high, priceDigits)} / 安値 ${formatNumber(summary.low, priceDigits)}`;
     chartDialogStart.textContent = formatChartTime(summary.start.t, timezone);
     chartDialogEnd.textContent = formatChartTime(summary.end.t, timezone);
-    renderChart(chartDialogSvg, points, {
-      width: 720,
-      height: 280,
-      paddingX: 18,
-      paddingY: 24,
+    renderDetailedChart(chartDialogSvg, points, timezone, {
+      width: 800,
+      height: 450,
       pointRadius: 3,
-      showGuide: true,
     });
   }
 
@@ -318,11 +456,9 @@ function renderMarket(market, chartPayload, timezone) {
   chartTrigger.disabled = detailPoints.length === 0;
   chartTrigger.classList.toggle("is-disabled", detailPoints.length === 0);
 
-  renderChart(sparklineSvg, sparklinePoints, {
-    width: 160,
-    height: 40,
-    paddingX: 2,
-    paddingY: 4,
+  renderSparkline(sparklineSvg, sparklinePoints, {
+    width: 192,
+    height: 108,
     pointRadius: 2.2,
   });
 
