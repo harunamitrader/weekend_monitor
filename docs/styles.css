@@ -278,7 +278,9 @@ h1 {
   }
 
   .metric-label {
-    display: none;
+    display: block;
+    font-size: 0.56rem;
+    letter-spacing: 0.04em;
   }
 
   .market-name {
@@ -428,5 +430,9 @@ h1 {
 
   .metric-value {
     font-size: 0.66rem;
+  }
+
+  .metric-label {
+    font-size: 0.5rem;
   }
 }
