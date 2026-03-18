@@ -284,6 +284,20 @@ h1 {
   stroke: #6b7280;
 }
 
+.chart-reference-label {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.02em;
+}
+
+.chart-reference-label.is-current {
+  fill: #d97706;
+}
+
+.chart-reference-label.is-baseline {
+  fill: #6b7280;
+}
+
 .chart-axis-label {
   fill: var(--muted);
   font-family: "IBM Plex Mono", monospace;

@@ -1,6 +1,7 @@
 const DATA_URL = "./data/latest.json";
 const CHART_DATA_URL = "./data/chart-series.json";
 const SVG_NS = "http://www.w3.org/2000/svg";
+const REFRESH_INTERVAL_MS = 60 * 1000;
 
 const marketGrid = document.querySelector("#market-grid");
 const summaryText = document.querySelector("#summary-text");
@@ -47,6 +48,12 @@ const MARKET_GROUPS = [
     ids: ["bitcoin-usd", "ether-usd", "crypto-10-index"],
   },
 ];
+
+const appState = {
+  latestPayload: null,
+  chartPayload: null,
+  activeChartMarketId: null,
+};
 
 function formatNumber(value, digits = 2) {
   if (value == null || Number.isNaN(value)) {
@@ -326,6 +333,8 @@ function getPriceY(geometry, value) {
 }
 
 function appendReferenceLines(svg, geometry, referenceLines = []) {
+  let lastLabelY = null;
+
   for (const line of referenceLines) {
     const y = getPriceY(geometry, line.value);
     if (y == null) {
@@ -341,6 +350,24 @@ function appendReferenceLines(svg, geometry, referenceLines = []) {
         class: `chart-reference-line ${line.className}`,
       }),
     );
+
+    if (line.label) {
+      let labelY = y - 4;
+      if (lastLabelY != null && Math.abs(labelY - lastLabelY) < 12) {
+        labelY = lastLabelY - 12;
+      }
+
+      svg.append(
+        createSvgNode("text", {
+          x: geometry.plotRight - 4,
+          y: labelY.toFixed(2),
+          "text-anchor": "end",
+          class: `chart-reference-label ${line.className}`,
+        }),
+      );
+      svg.lastChild.textContent = line.label;
+      lastLabelY = labelY;
+    }
   }
 }
 
@@ -507,11 +534,7 @@ function renderDetailedChart(svg, points, timezone, options = {}) {
   );
 }
 
-function openChartDialog(market, chartPayload, timezone) {
-  if (!chartDialog) {
-    return;
-  }
-
+function updateChartDialog(market, chartPayload, timezone) {
   const points = getChartPoints(chartPayload, market.id, "points72h");
   const summary = summarizeSeries(points);
 
@@ -533,14 +556,25 @@ function openChartDialog(market, chartPayload, timezone) {
       width: 800,
       height: 450,
       referenceLines: [
-        { value: market.baselinePrice, className: "is-baseline" },
-        { value: market.currentPrice, className: "is-current" },
+        { value: market.baselinePrice, className: "is-baseline", label: "基準値" },
+        { value: market.currentPrice, className: "is-current", label: "現在値" },
       ],
     });
   }
+}
+
+function openChartDialog(market, chartPayload, timezone) {
+  if (!chartDialog) {
+    return;
+  }
+
+  appState.activeChartMarketId = market.id;
+  updateChartDialog(market, chartPayload, timezone);
 
   if (typeof chartDialog.showModal === "function") {
-    chartDialog.showModal();
+    if (!chartDialog.open) {
+      chartDialog.showModal();
+    }
     return;
   }
 
@@ -675,6 +709,10 @@ function bindDialogEvents() {
     return;
   }
 
+  chartDialog.addEventListener("close", () => {
+    appState.activeChartMarketId = null;
+  });
+
   chartDialog.addEventListener("click", (event) => {
     const bounds = chartDialog.getBoundingClientRect();
     const clickedOutside =
@@ -689,34 +727,64 @@ function bindDialogEvents() {
   });
 }
 
+function renderPage(latestPayload, chartPayload) {
+  const markets = Array.isArray(latestPayload.markets) ? latestPayload.markets : [];
+  const timezone = latestPayload.timezone || chartPayload.timezone || "Asia/Tokyo";
+
+  summaryText.textContent =
+    `${markets.length}銘柄 / ${latestPayload.baselineLabelJa || "前日終値"}`;
+  updatedAt.textContent = `最終更新 ${formatUpdatedAt(latestPayload.updatedAt, timezone)}`;
+
+  if (markets.length === 0) {
+    renderEmpty("まだ監視データがありません。");
+    return;
+  }
+
+  const groups = groupMarkets(markets);
+
+  marketGrid.innerHTML = "";
+  const fragment = document.createDocumentFragment();
+  for (const group of groups) {
+    fragment.append(renderGroupHeading(group.label, group.markets.length));
+    for (const market of group.markets) {
+      fragment.append(renderMarket(market, chartPayload, timezone));
+    }
+  }
+  marketGrid.append(fragment);
+
+  if (appState.activeChartMarketId) {
+    const activeMarket = markets.find((market) => market.id === appState.activeChartMarketId);
+    if (activeMarket) {
+      updateChartDialog(activeMarket, chartPayload, timezone);
+    }
+  }
+}
+
+async function refreshData(options = {}) {
+  const { latestPayload, chartPayload } = await loadData();
+  const hasChanged =
+    latestPayload.updatedAt !== appState.latestPayload?.updatedAt ||
+    chartPayload.updatedAt !== appState.chartPayload?.updatedAt;
+
+  if (!hasChanged) {
+    return;
+  }
+
+  appState.latestPayload = latestPayload;
+  appState.chartPayload = chartPayload;
+  renderPage(latestPayload, chartPayload);
+}
+
 async function main() {
   bindDialogEvents();
 
   try {
-    const { latestPayload, chartPayload } = await loadData();
-    const markets = Array.isArray(latestPayload.markets) ? latestPayload.markets : [];
-    const timezone = latestPayload.timezone || chartPayload.timezone || "Asia/Tokyo";
-
-    summaryText.textContent =
-      `${markets.length}銘柄 / ${latestPayload.baselineLabelJa || "前日終値"}`;
-    updatedAt.textContent = `最終更新 ${formatUpdatedAt(latestPayload.updatedAt, timezone)}`;
-
-    if (markets.length === 0) {
-      renderEmpty("まだ監視データがありません。");
-      return;
-    }
-
-    const groups = groupMarkets(markets);
-
-    marketGrid.innerHTML = "";
-    const fragment = document.createDocumentFragment();
-    for (const group of groups) {
-      fragment.append(renderGroupHeading(group.label, group.markets.length));
-      for (const market of group.markets) {
-        fragment.append(renderMarket(market, chartPayload, timezone));
-      }
-    }
-    marketGrid.append(fragment);
+    await refreshData();
+    window.setInterval(() => {
+      void refreshData({ silent: true }).catch((error) => {
+        console.error(error instanceof Error ? error.message : String(error));
+      });
+    }, REFRESH_INTERVAL_MS);
   } catch (error) {
     summaryText.textContent = "データ取得不可";
     updatedAt.textContent = "更新に失敗しました";
