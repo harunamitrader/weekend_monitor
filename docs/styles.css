@@ -502,13 +502,13 @@ h1 {
   }
 
   .market-headline {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr)) 88px;
     gap: 4px 6px;
     padding-bottom: 6px;
   }
 
   .market-headline .headline-cell:first-child {
-    grid-column: 1 / 5;
+    grid-column: 1 / 6;
   }
 
   .market-headline .headline-cell {
@@ -604,7 +604,7 @@ h1 {
   }
 
   .market-headline {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr)) 74px;
     gap: 4px 5px;
   }
 
