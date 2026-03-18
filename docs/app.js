@@ -177,17 +177,20 @@ function getPriceDigits(points) {
   return 4;
 }
 
-function buildChartGeometry(points, width, height, padding) {
+function buildChartGeometry(points, width, height, padding, referencePrices = []) {
   if (!points.length) {
     return null;
   }
 
   const timestamps = points.map((point) => Date.parse(point.t));
   const prices = points.map((point) => point.price);
+  const extraPrices = referencePrices.filter(
+    (price) => price != null && Number.isFinite(Number(price)),
+  );
   const minTimestamp = Math.min(...timestamps);
   const maxTimestamp = Math.max(...timestamps);
-  const actualMinPrice = Math.min(...prices);
-  const actualMaxPrice = Math.max(...prices);
+  const actualMinPrice = Math.min(...prices, ...extraPrices);
+  const actualMaxPrice = Math.max(...prices, ...extraPrices);
   const pricePadding =
     actualMinPrice === actualMaxPrice
       ? Math.max(Math.abs(actualMinPrice) * 0.002, 1)
@@ -228,6 +231,38 @@ function buildPolyline(coords) {
   return coords.map(({ x, y }) => `${x.toFixed(2)},${y.toFixed(2)}`).join(" ");
 }
 
+function getPriceY(geometry, value) {
+  if (value == null || !Number.isFinite(Number(value))) {
+    return null;
+  }
+
+  const ratio =
+    geometry.maxPrice === geometry.minPrice
+      ? 0.5
+      : (Number(value) - geometry.minPrice) / (geometry.maxPrice - geometry.minPrice);
+
+  return geometry.plotBottom - ratio * geometry.plotHeight;
+}
+
+function appendReferenceLines(svg, geometry, referenceLines = []) {
+  for (const line of referenceLines) {
+    const y = getPriceY(geometry, line.value);
+    if (y == null) {
+      continue;
+    }
+
+    svg.append(
+      createSvgNode("line", {
+        x1: geometry.plotLeft,
+        y1: y.toFixed(2),
+        x2: geometry.plotRight,
+        y2: y.toFixed(2),
+        class: `chart-reference-line ${line.className}`,
+      }),
+    );
+  }
+}
+
 function createTicks(min, max, count) {
   if (count <= 1) {
     return [min];
@@ -260,7 +295,7 @@ function renderSparkline(svg, points, options = {}) {
     right: options.paddingRight ?? 8,
     bottom: options.paddingBottom ?? 8,
     left: options.paddingLeft ?? 8,
-  });
+  }, (options.referenceLines || []).map((line) => line.value));
 
   if (!geometry) {
     renderEmptyChart(svg, width, height);
@@ -270,11 +305,12 @@ function renderSparkline(svg, points, options = {}) {
   svg.replaceChildren();
   svg.classList.toggle("is-empty", points.length < 2);
 
-  const trendUp = points.at(-1).price >= points[0].price;
+  appendReferenceLines(svg, geometry, options.referenceLines);
+
   svg.append(
     createSvgNode("polyline", {
       points: buildPolyline(geometry.coords),
-      class: `chart-line ${trendUp ? "is-positive" : "is-negative"}`,
+      class: "chart-line",
     }),
   );
 }
@@ -287,7 +323,7 @@ function renderDetailedChart(svg, points, timezone, options = {}) {
     right: options.paddingRight ?? 12,
     bottom: options.paddingBottom ?? 38,
     left: options.paddingLeft ?? 64,
-  });
+  }, (options.referenceLines || []).map((line) => line.value));
 
   if (!geometry) {
     renderEmptyChart(svg, width, height, "72時間の履歴なし");
@@ -358,11 +394,12 @@ function renderDetailedChart(svg, points, timezone, options = {}) {
     svg.lastChild.textContent = formatChartTime(new Date(tickValue), timezone);
   }
 
-  const trendUp = points.at(-1).price >= points[0].price;
+  appendReferenceLines(svg, geometry, options.referenceLines);
+
   svg.append(
     createSvgNode("polyline", {
       points: buildPolyline(geometry.coords),
-      class: `chart-line ${trendUp ? "is-positive" : "is-negative"}`,
+      class: "chart-line",
     }),
   );
 }
@@ -392,7 +429,10 @@ function openChartDialog(market, chartPayload, timezone) {
     renderDetailedChart(chartDialogSvg, points, timezone, {
       width: 800,
       height: 450,
-      pointRadius: 3,
+      referenceLines: [
+        { value: market.baselinePrice, className: "is-baseline" },
+        { value: market.currentPrice, className: "is-current" },
+      ],
     });
   }
 
@@ -434,7 +474,10 @@ function renderMarket(market, chartPayload, timezone) {
   renderSparkline(sparklineSvg, sparklinePoints, {
     width: 192,
     height: 108,
-    pointRadius: 2.2,
+    referenceLines: [
+      { value: market.baselinePrice, className: "is-baseline" },
+      { value: market.currentPrice, className: "is-current" },
+    ],
   });
 
   chartTrigger.addEventListener("click", () => {

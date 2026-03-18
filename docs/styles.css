@@ -254,14 +254,7 @@ h1 {
   stroke-width: 1.8;
   stroke-linecap: round;
   stroke-linejoin: round;
-}
-
-.chart-line.is-positive {
-  stroke: var(--positive);
-}
-
-.chart-line.is-negative {
-  stroke: var(--negative);
+  stroke: #2563eb;
 }
 
 .chart-empty-text {
@@ -275,6 +268,19 @@ h1 {
   stroke: rgba(17, 17, 17, 0.16);
   stroke-width: 1;
   stroke-dasharray: 2 4;
+}
+
+.chart-reference-line {
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+
+.chart-reference-line.is-current {
+  stroke: #d97706;
+}
+
+.chart-reference-line.is-baseline {
+  stroke: #6b7280;
 }
 
 .chart-axis-label {
