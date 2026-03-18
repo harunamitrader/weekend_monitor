@@ -227,7 +227,7 @@ h1 {
 }
 
 .chart-trigger {
-  width: min(208px, 100%);
+  width: min(104px, 100%);
   display: grid;
   grid-template-columns: 1fr;
   gap: 6px;
@@ -265,21 +265,17 @@ h1 {
 
 .chart-line {
   fill: none;
-  stroke-width: 2;
+  stroke-width: 1.8;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.chart-line.is-positive,
-.chart-endpoint.is-positive {
+.chart-line.is-positive {
   stroke: var(--positive);
-  fill: var(--positive);
 }
 
-.chart-line.is-negative,
-.chart-endpoint.is-negative {
+.chart-line.is-negative {
   stroke: var(--negative);
-  fill: var(--negative);
 }
 
 .chart-empty-text {
@@ -482,7 +478,7 @@ h1 {
   }
 
   .chart-trigger {
-    width: min(192px, 100%);
+    width: min(96px, 100%);
     padding: 7px;
   }
 
@@ -597,7 +593,7 @@ h1 {
   }
 
   .chart-trigger {
-    width: min(168px, 100%);
+    width: min(88px, 100%);
     gap: 5px;
     padding: 6px;
   }

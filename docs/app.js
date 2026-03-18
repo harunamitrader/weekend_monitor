@@ -277,18 +277,6 @@ function renderSparkline(svg, points, options = {}) {
       class: `chart-line ${trendUp ? "is-positive" : "is-negative"}`,
     }),
   );
-
-  const lastPoint = geometry.coords.at(-1);
-  if (lastPoint) {
-    svg.append(
-      createSvgNode("circle", {
-        cx: lastPoint.x.toFixed(2),
-        cy: lastPoint.y.toFixed(2),
-        r: options.pointRadius ?? 2.4,
-        class: `chart-endpoint ${trendUp ? "is-positive" : "is-negative"}`,
-      }),
-    );
-  }
 }
 
 function renderDetailedChart(svg, points, timezone, options = {}) {
@@ -377,18 +365,6 @@ function renderDetailedChart(svg, points, timezone, options = {}) {
       class: `chart-line ${trendUp ? "is-positive" : "is-negative"}`,
     }),
   );
-
-  const lastPoint = geometry.coords.at(-1);
-  if (lastPoint) {
-    svg.append(
-      createSvgNode("circle", {
-        cx: lastPoint.x.toFixed(2),
-        cy: lastPoint.y.toFixed(2),
-        r: options.pointRadius ?? 3,
-        class: `chart-endpoint ${trendUp ? "is-positive" : "is-negative"}`,
-      }),
-    );
-  }
 }
 
 function openChartDialog(market, chartPayload, timezone) {
