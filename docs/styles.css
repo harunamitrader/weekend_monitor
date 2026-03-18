@@ -111,7 +111,7 @@ h1 {
 .market-headline {
   margin-top: 20px;
   display: grid;
-  grid-template-columns: minmax(220px, 2.4fr) repeat(4, minmax(120px, 1fr));
+  grid-template-columns: minmax(220px, 2.2fr) repeat(4, minmax(110px, 1fr)) 104px;
   gap: 20px;
   padding: 0 20px 12px;
   color: var(--muted);
@@ -151,9 +151,9 @@ h1 {
 
 .market-card {
   display: grid;
-  grid-template-columns: minmax(220px, 2.4fr) repeat(4, minmax(120px, 1fr));
+  grid-template-columns: minmax(220px, 2.2fr) repeat(4, minmax(110px, 1fr)) 104px;
   gap: 20px;
-  align-items: center;
+  align-items: start;
   padding: 20px;
   border-bottom: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.75);
@@ -208,8 +208,10 @@ h1 {
 }
 
 .market-chart-row {
-  grid-column: 1 / -1;
-  margin-top: 10px;
+  grid-column: 6;
+  grid-row: 1;
+  margin-top: 0;
+  justify-self: end;
 }
 
 .chart-trigger {
@@ -465,7 +467,9 @@ h1 {
   }
 
   .market-chart-row {
+    grid-column: 1 / -1;
     margin-top: 8px;
+    justify-self: start;
   }
 
   .chart-trigger {
