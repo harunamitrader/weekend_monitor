@@ -70,8 +70,45 @@
         <div class="market-actions">
           <a class="market-link" target="_blank" rel="noreferrer">開く</a>
         </div>
+        <div class="market-chart-row">
+          <button type="button" class="chart-trigger">
+            <span class="chart-trigger-label">24H</span>
+            <svg
+              class="chart-sparkline"
+              viewBox="0 0 160 40"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            ></svg>
+          </button>
+        </div>
       </article>
     </template>
+
+    <dialog id="chart-dialog" class="chart-dialog">
+      <form method="dialog" class="chart-dialog-shell">
+        <div class="chart-dialog-header">
+          <div>
+            <p id="chart-dialog-caption" class="chart-dialog-caption">過去72時間</p>
+            <h2 id="chart-dialog-title" class="chart-dialog-title"></h2>
+          </div>
+          <button class="chart-dialog-close" value="close">閉じる</button>
+        </div>
+        <p id="chart-dialog-meta" class="chart-dialog-meta"></p>
+        <div class="chart-dialog-body">
+          <svg
+            id="chart-dialog-svg"
+            class="chart-dialog-svg"
+            viewBox="0 0 720 280"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+          ></svg>
+        </div>
+        <div class="chart-dialog-range">
+          <span id="chart-dialog-start"></span>
+          <span id="chart-dialog-end"></span>
+        </div>
+      </form>
+    </dialog>
 
     <script type="module" src="./app.js"></script>
   </body>

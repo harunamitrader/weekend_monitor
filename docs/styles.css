@@ -221,6 +221,154 @@ h1 {
   color: var(--surface);
 }
 
+.market-chart-row {
+  grid-column: 1 / -1;
+  margin-top: 10px;
+}
+
+.chart-trigger {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.chart-trigger.is-disabled {
+  cursor: default;
+}
+
+.chart-trigger-label {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.64rem;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.chart-sparkline,
+.chart-dialog-svg {
+  width: 100%;
+  display: block;
+  overflow: visible;
+}
+
+.chart-sparkline {
+  height: 40px;
+}
+
+.chart-line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.chart-line.is-positive,
+.chart-endpoint.is-positive {
+  stroke: var(--positive);
+  fill: var(--positive);
+}
+
+.chart-line.is-negative,
+.chart-endpoint.is-negative {
+  stroke: var(--negative);
+  fill: var(--negative);
+}
+
+.chart-guide-line {
+  stroke: rgba(17, 17, 17, 0.1);
+  stroke-width: 1;
+}
+
+.chart-empty-text {
+  fill: var(--muted);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+.chart-dialog {
+  width: min(720px, calc(100% - 24px));
+  max-width: 720px;
+  padding: 0;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.chart-dialog::backdrop {
+  background: rgba(17, 17, 17, 0.28);
+}
+
+.chart-dialog-shell {
+  margin: 0;
+  padding: 18px;
+}
+
+.chart-dialog-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.chart-dialog-caption,
+.chart-dialog-meta,
+.chart-dialog-range {
+  font-family: "IBM Plex Mono", monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.chart-dialog-caption {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
+.chart-dialog-title {
+  margin: 0;
+  font-size: 1.35rem;
+  line-height: 1.1;
+}
+
+.chart-dialog-close {
+  border: 1px solid var(--ink);
+  background: transparent;
+  padding: 8px 12px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.chart-dialog-meta {
+  margin: 12px 0 14px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.chart-dialog-body {
+  padding: 8px 0;
+}
+
+.chart-dialog-svg {
+  height: 280px;
+}
+
+.chart-dialog-range {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 0.68rem;
+}
+
 .align-right {
   text-align: right;
 }
@@ -316,6 +464,19 @@ h1 {
   .market-link {
     padding: 8px 0;
     font-size: 0.62rem;
+  }
+
+  .market-chart-row {
+    margin-top: 8px;
+  }
+
+  .chart-trigger {
+    gap: 8px;
+    padding-top: 6px;
+  }
+
+  .chart-sparkline {
+    height: 34px;
   }
 }
 
@@ -424,6 +585,19 @@ h1 {
     font-size: 0.58rem;
   }
 
+  .chart-trigger {
+    grid-template-columns: 36px minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  .chart-trigger-label {
+    font-size: 0.56rem;
+  }
+
+  .chart-sparkline {
+    height: 28px;
+  }
+
   .empty-state {
     padding: 18px 0;
   }
@@ -463,5 +637,22 @@ h1 {
 
   .metric-label {
     font-size: 0.5rem;
+  }
+
+  .chart-dialog-shell {
+    padding: 14px;
+  }
+
+  .chart-dialog-title {
+    font-size: 1.05rem;
+  }
+
+  .chart-dialog-meta,
+  .chart-dialog-range {
+    font-size: 0.6rem;
+  }
+
+  .chart-dialog-svg {
+    height: 220px;
   }
 }

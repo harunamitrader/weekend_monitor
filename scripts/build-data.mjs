@@ -7,6 +7,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.resolve(__dirname, "..");
 const MARKETS_FILE = path.join(ROOT_DIR, "data", "markets.json");
 const OUTPUT_FILE = path.join(ROOT_DIR, "docs", "data", "latest.json");
+const CHART_OUTPUT_FILE = path.join(ROOT_DIR, "docs", "data", "chart-series.json");
 const SNAPSHOT_FILE = path.join(ROOT_DIR, "data", "snapshots", "latest-run.json");
 const HISTORY_DIR = path.join(ROOT_DIR, "data", "history");
 const HISTORY_INDEX_FILE = path.join(HISTORY_DIR, "index.json");
@@ -18,6 +19,9 @@ const BASELINE_STATE_FILE = path.join(
 );
 const TIME_ZONE = "Asia/Tokyo";
 const BASELINE_STATE_VERSION = 3;
+const SPARKLINE_WINDOW_HOURS = 24;
+const DETAIL_WINDOW_HOURS = 72;
+const CHART_HISTORY_FILE_COUNT = 4;
 
 function resolveNow() {
   const raw = process.env.BUILD_NOW;
@@ -570,6 +574,96 @@ async function appendHistory(payload, nowInfo) {
   await writeJson(HISTORY_INDEX_FILE, historyIndex);
 }
 
+function pickChartPrice(market) {
+  if (market.currentPrice == null || !Number.isFinite(Number(market.currentPrice))) {
+    return null;
+  }
+
+  return round(Number(market.currentPrice));
+}
+
+function dedupeChartPoints(points) {
+  const byTimestamp = new Map();
+
+  for (const point of points) {
+    byTimestamp.set(point.t, point);
+  }
+
+  return [...byTimestamp.values()].sort((left, right) => left.t.localeCompare(right.t));
+}
+
+async function buildChartSeriesPayload(now) {
+  const historyIndex = await readJson(HISTORY_INDEX_FILE, {
+    timezone: TIME_ZONE,
+    files: [],
+  });
+  const recentEntries = [...(historyIndex.files || [])].slice(-CHART_HISTORY_FILE_COUNT);
+  const historyFiles = await Promise.all(
+    recentEntries.map((entry) =>
+      readJson(path.join(ROOT_DIR, entry.file), {
+        date: entry.date,
+        timezone: TIME_ZONE,
+        runs: [],
+      }),
+    ),
+  );
+
+  const detailCutoff = now.getTime() - DETAIL_WINDOW_HOURS * 60 * 60 * 1000;
+  const sparklineCutoff = now.getTime() - SPARKLINE_WINDOW_HOURS * 60 * 60 * 1000;
+  const pointsByMarket = new Map();
+
+  for (const historyFile of historyFiles) {
+    for (const run of historyFile.runs || []) {
+      const updatedMs = Date.parse(run.updatedAt);
+      if (!Number.isFinite(updatedMs) || updatedMs < detailCutoff) {
+        continue;
+      }
+
+      for (const market of run.markets || []) {
+        const price = pickChartPrice(market);
+        if (price == null) {
+          continue;
+        }
+
+        if (!pointsByMarket.has(market.id)) {
+          pointsByMarket.set(market.id, []);
+        }
+
+        pointsByMarket.get(market.id).push({
+          t: run.updatedAt,
+          price,
+          stale: Boolean(market.stale),
+        });
+      }
+    }
+  }
+
+  const markets = Object.fromEntries(
+    [...pointsByMarket.entries()].map(([marketId, rawPoints]) => {
+      const points72h = dedupeChartPoints(rawPoints);
+      const points24h = points72h.filter(
+        (point) => Date.parse(point.t) >= sparklineCutoff,
+      );
+
+      return [
+        marketId,
+        {
+          points24h,
+          points72h,
+        },
+      ];
+    }),
+  );
+
+  return {
+    updatedAt: now.toISOString(),
+    timezone: TIME_ZONE,
+    sparklineWindowHours: SPARKLINE_WINDOW_HOURS,
+    detailWindowHours: DETAIL_WINDOW_HOURS,
+    markets,
+  };
+}
+
 function summarizeBaselinePayload(markets) {
   const uniqueModes = new Map();
 
@@ -685,6 +779,7 @@ async function main() {
   await writeJson(SNAPSHOT_FILE, payload);
   await writeJson(BASELINE_STATE_FILE, nextBaselineState);
   await appendHistory(payload, nowInfo);
+  await writeJson(CHART_OUTPUT_FILE, await buildChartSeriesPayload(now));
 
   const freshCount = normalizedMarkets.filter((market) => !market.stale).length;
   const staleCount = normalizedMarkets.length - freshCount;
