@@ -245,7 +245,21 @@ h1 {
 
 @media (max-width: 980px) {
   .market-headline {
-    display: none;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) 72px;
+    gap: 6px 12px;
+    margin-top: 16px;
+    padding: 0 0 8px;
+  }
+
+  .market-headline .headline-cell:first-child {
+    grid-column: 1 / 5;
+    text-align: left;
+  }
+
+  .market-headline .headline-cell:last-child {
+    grid-column: 5;
+    text-align: center;
   }
 
   .market-group-heading {
@@ -349,6 +363,16 @@ h1 {
     padding-bottom: 5px;
   }
 
+  .market-headline {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) 54px;
+    gap: 4px 8px;
+    padding-bottom: 6px;
+  }
+
+  .market-headline .headline-cell {
+    font-size: 0.52rem;
+  }
+
   .market-group-label {
     font-size: 0.62rem;
   }
@@ -418,6 +442,11 @@ h1 {
   .market-card {
     grid-template-columns: repeat(4, minmax(0, 1fr)) 50px;
     gap: 6px 6px;
+  }
+
+  .market-headline {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) 50px;
+    gap: 4px 6px;
   }
 
   .market-name {
