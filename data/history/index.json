@@ -30,7 +30,13 @@
       "file": "data/history/2026-03-21.json",
       "runCount": 96,
       "latestUpdatedAt": "2026-03-21T14:45:21.513Z"
+    },
+    {
+      "date": "2026-03-22",
+      "file": "data/history/2026-03-22.json",
+      "runCount": 1,
+      "latestUpdatedAt": "2026-03-21T15:00:23.744Z"
     }
   ],
-  "updatedAt": "2026-03-21T14:45:21.513Z"
+  "updatedAt": "2026-03-21T15:00:23.744Z"
 }
