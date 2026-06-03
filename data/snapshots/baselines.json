@@ -9,8 +9,8 @@
       "currentSession": {
         "date": "2026-06-03",
         "weekday": "Wed",
-        "closePrice": 30597,
-        "capturedAt": "2026-06-03T19:01:15.861Z",
+        "closePrice": 30577.8,
+        "capturedAt": "2026-06-03T19:16:07.174Z",
         "seeded": false
       },
       "previousClose": {
@@ -36,8 +36,8 @@
       "currentSession": {
         "date": "2026-06-03",
         "weekday": "Wed",
-        "closePrice": 50872.9,
-        "capturedAt": "2026-06-03T19:01:15.861Z",
+        "closePrice": 50817.6,
+        "capturedAt": "2026-06-03T19:16:07.174Z",
         "seeded": false
       },
       "previousClose": {
@@ -63,8 +63,8 @@
       "currentSession": {
         "date": "2026-06-03",
         "weekday": "Wed",
-        "closePrice": 10321.6,
-        "capturedAt": "2026-06-03T19:01:15.861Z",
+        "closePrice": 10315.8,
+        "capturedAt": "2026-06-03T19:16:07.174Z",
         "seeded": false
       },
       "previousClose": {
@@ -91,7 +91,7 @@
         "date": "2026-06-03",
         "weekday": "Wed",
         "closePrice": 24774.5,
-        "capturedAt": "2026-06-03T19:01:15.861Z",
+        "capturedAt": "2026-06-03T19:16:07.174Z",
         "seeded": false
       },
       "previousClose": {
@@ -118,7 +118,7 @@
         "date": "2026-06-03",
         "weekday": "Wed",
         "closePrice": 25403.6,
-        "capturedAt": "2026-06-03T19:01:15.861Z",
+        "capturedAt": "2026-06-03T19:16:07.174Z",
         "seeded": false
       },
       "previousClose": {
@@ -144,8 +144,8 @@
       "currentSession": {
         "date": "2026-06-03",
         "weekday": "Wed",
-        "closePrice": 8739.3,
-        "capturedAt": "2026-06-03T19:01:15.861Z",
+        "closePrice": 8739.6,
+        "capturedAt": "2026-06-03T19:16:07.174Z",
         "seeded": false
       },
       "previousClose": {
@@ -171,8 +171,8 @@
       "currentSession": {
         "date": "2026-06-03",
         "weekday": "Wed",
-        "closePrice": 4440.3,
-        "capturedAt": "2026-06-03T19:01:15.861Z",
+        "closePrice": 4447.1,
+        "capturedAt": "2026-06-03T19:16:07.174Z",
         "seeded": false
       },
       "previousClose": {
@@ -198,8 +198,8 @@
       "currentSession": {
         "date": "2026-06-03",
         "weekday": "Wed",
-        "closePrice": 7325.3,
-        "capturedAt": "2026-06-03T19:01:15.861Z",
+        "closePrice": 7334.4,
+        "capturedAt": "2026-06-03T19:16:07.174Z",
         "seeded": false
       },
       "previousClose": {
@@ -225,8 +225,8 @@
       "currentSession": {
         "date": "2026-06-03",
         "weekday": "Wed",
-        "closePrice": 9458.9,
-        "capturedAt": "2026-06-03T19:01:15.861Z",
+        "closePrice": 9442.5,
+        "capturedAt": "2026-06-03T19:16:07.174Z",
         "seeded": false
       },
       "previousClose": {
@@ -252,8 +252,8 @@
       "currentSession": {
         "date": "2026-06-03",
         "weekday": "Wed",
-        "closePrice": 160.034,
-        "capturedAt": "2026-06-03T19:01:15.861Z",
+        "closePrice": 160.02,
+        "capturedAt": "2026-06-03T19:16:07.174Z",
         "seeded": false
       },
       "previousClose": {
@@ -280,7 +280,7 @@
         "date": "2026-06-03",
         "weekday": "Wed",
         "closePrice": 1.1599,
-        "capturedAt": "2026-06-03T19:01:15.861Z",
+        "capturedAt": "2026-06-03T19:16:07.174Z",
         "seeded": false
       },
       "previousClose": {
@@ -307,7 +307,7 @@
         "date": "2026-06-03",
         "weekday": "Wed",
         "closePrice": 65996.5,
-        "capturedAt": "2026-06-03T19:01:15.861Z",
+        "capturedAt": "2026-06-03T19:16:07.174Z",
         "seeded": false
       },
       "previousClose": {
@@ -334,7 +334,7 @@
         "date": "2026-06-03",
         "weekday": "Wed",
         "closePrice": 1830.3,
-        "capturedAt": "2026-06-03T19:01:15.861Z",
+        "capturedAt": "2026-06-03T19:16:07.174Z",
         "seeded": false
       },
       "previousClose": {
@@ -361,7 +361,7 @@
         "date": "2026-06-03",
         "weekday": "Wed",
         "closePrice": 13326.36,
-        "capturedAt": "2026-06-03T19:01:15.861Z",
+        "capturedAt": "2026-06-03T19:16:07.174Z",
         "seeded": false
       },
       "previousClose": {
